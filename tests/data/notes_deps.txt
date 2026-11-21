@@ -1,0 +1,29 @@
+Synthetic release notes for VUPDATE tests, laid out like VSI patch kit notes.
+
+1  KIT NAME:
+
+     VMS842L2A_EXAMPLE-V0200
+
+2  KIT DESCRIPTION:
+
+     2.1  Installation Rating:
+
+     INSTALL_3
+
+     2.2  Reboot Requirement:
+
+     No reboot is necessary after installation of this kit.
+
+3  KITS SUPERSEDED BY THIS KIT:
+
+     VMS842L2A_EXAMPLE-V0100
+
+4  KIT DEPENDENCIES:
+
+     VMS842L2A_LCKMGR-V0100
+     VMS842L2A_NOTARY_V0200
+
+
+5  PROBLEMS ADDRESSED IN THIS KIT
+
+     5.1  Requires VMS842L2A_OTHER-V0300 only in prose, not a dependency.

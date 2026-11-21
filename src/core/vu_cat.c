@@ -238,3 +238,88 @@ void vu_entry_set_minos(vu_entry *e, const vu_detail *d)
     for (i = 0; i < d->entry.nminos; i++)
         memcpy(e->minos[i], d->entry.minos[i], sizeof e->minos[i]);
 }
+
+/* Is s (len n) a kit name: [A-Z0-9_$]+ then '-' or '_' then V + 4 digits, then
+ * optional -digits groups? Writes the normalised name to out. */
+static int kit_token(const char *s, size_t n, char *out, size_t sz)
+{
+    size_t i, v = 0;
+    if (n < 7 || n >= sz)
+        return 0;
+    for (i = 1; i + 5 <= n; i++)
+        if ((s[i - 1] == '-' || s[i - 1] == '_') && toupper((unsigned char)s[i]) == 'V'
+            && isdigit((unsigned char)s[i + 1]) && isdigit((unsigned char)s[i + 2])
+            && isdigit((unsigned char)s[i + 3]) && isdigit((unsigned char)s[i + 4])
+            && (i + 5 == n || s[i + 5] == '-'))
+            v = i;
+    if (!v || v < 2)
+        return 0;
+    for (i = 0; i < v - 1; i++)
+        if (!(isalnum((unsigned char)s[i]) || s[i] == '_' || s[i] == '$'))
+            return 0;
+    for (i = v + 5; i < n; i++)
+        if (!(isdigit((unsigned char)s[i]) || s[i] == '-'))
+            return 0;
+    for (i = 0; i < n; i++)
+        out[i] = (char)toupper((unsigned char)s[i]);
+    out[v - 1] = '-';
+    out[n] = '\0';
+    return 1;
+}
+
+/* A numbered heading: optional blanks, digits (and dots), blanks, a capital. */
+static int heading(const char *l, const char *e)
+{
+    while (l < e && *l == ' ')
+        l++;
+    if (l >= e || !isdigit((unsigned char)*l))
+        return 0;
+    while (l < e && (isdigit((unsigned char)*l) || *l == '.'))
+        l++;
+    if (l >= e || *l != ' ')
+        return 0;
+    while (l < e && *l == ' ')
+        l++;
+    return l < e && isupper((unsigned char)*l);
+}
+
+int vu_notes_dependencies(const char *text, char names[][64], int max)
+{
+    const char *l = text;
+    int in = 0, n = 0;
+    while (*l && n < max) {
+        const char *e = strchr(l, '\n');
+        const char *end = e ? e : l + strlen(l);
+        if (end > l && end[-1] == '\r')
+            end--;
+        if (heading(l, end)) {
+            if (in)
+                break; /* the next section */
+            char h[64];
+            size_t hl = (size_t)(end - l);
+            in = 0;
+            if (hl < sizeof h) { /* has_ci needs the line on its own */
+                memcpy(h, l, hl);
+                h[hl] = '\0';
+                in = has_ci(h, "KIT DEPENDENCIES");
+            }
+        } else if (in) {
+            const char *p = l;
+            while (p < end && n < max) {
+                const char *q;
+                while (p < end && (*p == ' ' || *p == '\t' || *p == ','))
+                    p++;
+                q = p;
+                while (q < end && *q != ' ' && *q != '\t' && *q != ',')
+                    q++;
+                if (q > p && kit_token(p, (size_t)(q - p), names[n], 64))
+                    n++;
+                p = q;
+            }
+        }
+        if (!e)
+            break;
+        l = e + 1;
+    }
+    return n;
+}

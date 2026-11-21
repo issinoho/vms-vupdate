@@ -471,6 +471,23 @@ static void test_kitfiles(void)
     free(a);
 }
 
+static void test_notes(void)
+{
+    char names[8][64];
+    char *t = need("tests/data/notes_deps.txt");
+    if (!t)
+        return;
+    CHECK(vu_notes_dependencies(t, names, 8) == 2);
+    CHECK_STR(names[0], "VMS842L2A_LCKMGR-V0100");
+    CHECK_STR(names[1], "VMS842L2A_NOTARY-V0200");
+    CHECK(vu_notes_dependencies(t, names, 1) == 1);
+    CHECK(vu_notes_dependencies("4  KIT DEPENDENCIES:\n\n     None\n\n5  PROBLEMS\n", names, 8) == 0);
+    CHECK(vu_notes_dependencies("no sections at all VMS842L2A_SYS-V0500\n", names, 8) == 0);
+    CHECK(vu_notes_dependencies("  4  KIT DEPENDENCIES:\r\n   VMS923X_UPDATE-V0300-1\r\n", names, 8) == 1);
+    CHECK_STR(names[0], "VMS923X_UPDATE-V0300-1");
+    free(t);
+}
+
 static void test_report(void)
 {
     vu_product p;
@@ -541,6 +558,7 @@ int main(void)
     test_auth();
     test_report();
     test_kitfiles();
+    test_notes();
     test_real();
     printf("%d checks, %d failed\n", checks, fails);
     return fails ? EXIT_FAILURE : EXIT_SUCCESS;

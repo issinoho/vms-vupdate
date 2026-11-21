@@ -69,6 +69,7 @@ FILE *fdopen(int fd, const char *mode);
 #define VU__MD5 VU_MSG(21, STS$K_ERROR)
 #define VU__KIT VU_MSG(22, STS$K_ERROR)
 #define VU__ABORTED VU_MSG(23, STS$K_ERROR)
+#define VU__PARTIAL VU_MSG(24, STS$K_ERROR)
 
 #define CAT_MAX_AGE 3600
 #define DETAIL_MAX_AGE 86400
@@ -128,6 +129,20 @@ static unsigned int msg_ns(unsigned int code, unsigned int n, const char *a)
     v[2] = 2;
     v[3] = n;
     v[4] = (unsigned int)(size_t)a;
+    fflush(stdout);
+    sys$putmsg(v, 0, 0, 0);
+    return code | STS$M_INHIB_MSG;
+}
+
+/* A message with two numbers (!UL, !UL). */
+static unsigned int msg_nn(unsigned int code, unsigned int a, unsigned int b)
+{
+    unsigned int v[5];
+    v[0] = 4;
+    v[1] = code;
+    v[2] = 2;
+    v[3] = a;
+    v[4] = b;
     fflush(stdout);
     sys$putmsg(v, 0, 0, 0);
     return code | STS$M_INHIB_MSG;
@@ -815,8 +830,11 @@ typedef struct {
     vu_detail d;
     int prereq_only;  /* added as a prerequisite of another kit */
     int reboot;
+    const char *blocked; /* why it can't be installed in this run, or NULL */
     char dir[256];    /* kit directory */
     char kitfile[128];
+    int nfirst;          /* kits from the same archive to install first (N22) */
+    char first[4][128];
 } job_t;
 
 static job_t *jobs;
@@ -920,7 +938,7 @@ static void remove_dir(const char *dir)
 typedef struct {
     const char *dir;
     int nkits;
-    char kitfile[128];
+    char kitfile[8][128]; /* the first 8 PCSI kits in the archive */
 } unzip_ctx;
 
 /* PCSI kit files are written as fixed 512-byte records, as VSI's instructions
@@ -932,13 +950,115 @@ static FILE *open_member(const char *name, void *user)
     int kind = vu_kitfile_kind(name);
     snprintf(path, sizeof path, "%s%s", u->dir, name);
     if (kind == VU_KF_PCSI || kind == VU_KF_COMPRESSED) {
+        if (u->nkits < 8)
+            strncpy(u->kitfile[u->nkits], name, sizeof u->kitfile[0] - 1);
         u->nkits++;
-        strncpy(u->kitfile, name, sizeof u->kitfile - 1);
         /* open() takes the RMS keywords (fopen is two-argument under /STANDARD=C99). */
         int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0, "rfm=fix", "mrs=512", "rat=none");
         return fd < 0 ? NULL : fdopen(fd, "wb");
     }
     return fopen(path, "wb");
+}
+
+/* Download one of a kit's files to path and check its MD5. 0 or a message value. */
+static unsigned int download_file(ctx_t *c, const vu_file *f, const char *path, int quiet)
+{
+    char hex[33], size[32];
+    unsigned long bytes = 0;
+    FILE *out;
+    int rc;
+    if (!c->s.user[0] && (cred_status = load_session(&c->s)) != 0)
+        return cred_status;
+    if (!quiet) {
+        mb((unsigned long)f->size, size, sizeof size);
+        printf("  downloading %s (%s) ...\n", f->save_as, size);
+        fflush(stdout);
+    }
+    if (!(out = fopen(path, "wb")))
+        return msg(VU__KIT, 2, path, "cannot create the file");
+    rc = vu_portal_download(&c->s, f->file_number, c->os, f->save_as, out, &bytes);
+    if (fclose(out) != 0 && rc == VU_OK) {
+        rc = VU_E_NET;
+        strcpy(c->s.err, "cannot write the kit file (disk full?)");
+    }
+    if (rc != VU_OK) {
+        remove(path);
+        return portal_msg(rc, c->s.err);
+    }
+    if (f->md5[0]) {
+        if (vu_md5_file(path, hex) != 0)
+            return msg(VU__KIT, 2, path, "cannot read back the download");
+        if (!same_name(hex, f->md5)) {
+            remove(path);
+            return msg(VU__MD5, 2, f->save_as, f->md5);
+        }
+        if (!quiet)
+            printf("  MD5 %s matches\n", hex);
+    } else if (!quiet) {
+        printf("  (the portal gives no MD5 for %s: not verified)\n", f->save_as);
+    }
+    return 0;
+}
+
+/* The release notes (.TXT among the kit's files), cached by file number; their
+ * KIT DEPENDENCIES are added to the job's prerequisites (N22). 0 or a message. */
+static unsigned int notes_prereqs(ctx_t *c, job_t *j)
+{
+    char names[VU_MAXPREREQ][64], path[96];
+    char *text;
+    int k, n, q;
+    unsigned int st;
+    for (k = 0; k < j->d.nfiles; k++) {
+        const vu_file *f = &j->d.files[k];
+        size_t l = strlen(f->save_as);
+        if (l > 4 && same_name(f->save_as + l - 4, ".TXT"))
+            break;
+    }
+    if (k == j->d.nfiles)
+        return 0; /* no release notes offered */
+    snprintf(path, sizeof path, "VUPDATE$ROOT:[CACHE]NOTES_%ld.TXT", j->d.files[k].file_number);
+    if (age_of(path) < 0 && (st = download_file(c, &j->d.files[k], path, 1)) != 0)
+        return st;
+    if (!(text = slurp(path, 4L << 20)))
+        return 0;
+    n = vu_notes_dependencies(text, names, VU_MAXPREREQ);
+    free(text);
+    for (q = 0; q < n && j->d.nprereq < VU_MAXPREREQ; q++) {
+        vu_prereq *p;
+        int have = 0, x;
+        size_t e;
+        for (x = 0; x < j->d.nprereq; x++)
+            if (same_name(j->d.prereq[x].kitname, names[q]))
+                have = 1;
+        if (have)
+            continue;
+        p = &j->d.prereq[j->d.nprereq++];
+        memset(p, 0, sizeof *p);
+        strncpy(p->kitname, names[q], sizeof p->kitname - 1);
+        printf("  %s: its release notes also need %s\n", j->e->kitname, names[q]);
+        if (vu_prereq_installed(&c->inv, names[q]))
+            continue;
+        /* The named kit, or the newest applicable catalogue kit of that product at
+         * that version or later (a note may name a kit since superseded). */
+        {
+            char prod[48], ver[48];
+            const vu_entry *best = NULL;
+            if (vu_kitname_decode(names[q], prod, sizeof prod, ver, sizeof ver))
+                for (e = 0; e < c->cat.n; e++) {
+                    const vu_entry *ce = &c->cat.e[e];
+                    if (!same_name(ce->product, prod) || vu_ver_cmp(ce->ver, ver) < 0
+                        || !vu_entry_applies(ce, c->os, c->archbit))
+                        continue;
+                    if (!best || vu_ver_cmp(ce->ver, best->ver) > 0)
+                        best = ce;
+                }
+            if (best) {
+                p->package_number = best->package_number;
+                strncpy(p->kitname, best->kitname, sizeof p->kitname - 1);
+            }
+        }
+    }
+    return 0;
 }
 
 /* Download, verify and unpack one job into its directory. 0 or a message value. */
@@ -951,39 +1071,15 @@ static unsigned int fetch_job(ctx_t *c, job_t *j, const char *work)
         return msg(VU__KIT, 2, j->dir, "cannot create the directory");
     for (k = 0; k < j->d.nfiles; k++) {
         const vu_file *f = &j->d.files[k];
-        char path[400], hex[33], err[256], size[32];
-        unsigned long bytes = 0;
-        FILE *out;
-        int rc, n;
+        char path[400], err[256];
+        unsigned int st;
+        int n;
         unzip_ctx u;
         if (!f->save_as[0] || strpbrk(f->save_as, ":[]<>/\\") || strstr(f->save_as, ".."))
             return msg(VU__KIT, 2, j->e->kitname, "the portal gave an unusable file name");
         snprintf(path, sizeof path, "%s%s", j->dir, f->save_as);
-        if (!c->s.user[0] && (cred_status = load_session(&c->s)) != 0)
-            return cred_status;
-        mb((unsigned long)f->size, size, sizeof size);
-        printf("  downloading %s (%s) ...\n", f->save_as, size);
-        fflush(stdout);
-        if (!(out = fopen(path, "wb")))
-            return msg(VU__KIT, 2, path, "cannot create the file");
-        rc = vu_portal_download(&c->s, f->file_number, c->os, f->save_as, out, &bytes);
-        if (fclose(out) != 0 && rc == VU_OK) {
-            rc = VU_E_NET;
-            strcpy(c->s.err, "cannot write the kit file (disk full?)");
-        }
-        if (rc != VU_OK) {
-            remove(path);
-            return portal_msg(rc, c->s.err);
-        }
-        if (f->md5[0]) {
-            if (vu_md5_file(path, hex) != 0)
-                return msg(VU__KIT, 2, path, "cannot read back the download");
-            if (!same_name(hex, f->md5))
-                return msg(VU__MD5, 2, f->save_as, f->md5);
-            printf("  MD5 %s matches\n", hex);
-        } else {
-            printf("  (the portal gives no MD5 for %s: not verified)\n", f->save_as);
-        }
+        if ((st = download_file(c, f, path, 0)) != 0)
+            return st;
         if (vu_kitfile_kind(f->save_as) != VU_KF_NONE) {
             strncpy(j->kitfile, f->save_as, sizeof j->kitfile - 1);
             continue;
@@ -999,11 +1095,48 @@ static unsigned int fetch_job(ctx_t *c, job_t *j, const char *work)
             return msg(VU__KIT, 2, f->save_as, err);
         while (remove(path) == 0)
             ;
-        if (u.nkits != 1)
-            return msg(VU__KIT, 2, f->save_as,
-                       u.nkits ? "holds more than one PCSI kit (not supported)"
-                               : "holds no PCSI kit");
-        strcpy(j->kitfile, u.kitfile);
+        if (u.nkits == 0)
+            return msg(VU__KIT, 2, f->save_as, "holds no PCSI kit");
+        if (u.nkits > 8)
+            return msg(VU__KIT, 2, f->save_as, "holds more than 8 PCSI kits");
+        /* Several kits (PWDMGMT's container also carries the PCSI patches it
+         * recommends): use the one for this product, list the others. */
+        {
+            int x, pick = u.nkits == 1 ? 0 : -1;
+            for (x = 0; x < u.nkits && pick < 0; x++) {
+                char pr[32], ba[16], pd[64];
+                if (vu_kitfile_parse(u.kitfile[x], pr, sizeof pr, ba, sizeof ba, pd, sizeof pd)
+                    && same_name(pd, j->e->product))
+                    pick = x;
+            }
+            if (pick < 0)
+                return msg(VU__KIT, 2, f->save_as, "holds several PCSI kits, none for this product");
+            for (x = 0; x < u.nkits; x++) {
+                char pr[32], ba[16], pd[64], fam[16];
+                int named = 0, p;
+                if (x == pick)
+                    continue;
+                /* Install it first when the kit's prerequisites (its release notes)
+                 * name it, it is made for this OpenVMS version and isn't installed. */
+                if (vu_kitfile_parse(u.kitfile[x], pr, sizeof pr, ba, sizeof ba, pd, sizeof pd)
+                    && vu_patch_family_os(pd, fam, sizeof fam) && same_name(fam, c->os)
+                    && !vu_inventory_find(&c->inv, pd) && j->nfirst < 4) {
+                    for (p = 0; p < j->d.nprereq; p++) {
+                        char dp[48], dv[48];
+                        if (vu_kitname_decode(j->d.prereq[p].kitname, dp, sizeof dp, dv, sizeof dv)
+                            && same_name(dp, pd))
+                            named = 1;
+                    }
+                }
+                if (named) {
+                    strcpy(j->first[j->nfirst++], u.kitfile[x]);
+                    printf("  also in the archive, installed first: %s\n", u.kitfile[x]);
+                } else {
+                    printf("  also in the archive (not installed): %s\n", u.kitfile[x]);
+                }
+            }
+            strcpy(j->kitfile, u.kitfile[pick]);
+        }
     }
     if (!j->kitfile[0])
         return msg(VU__KIT, 2, j->e->kitname, "no PCSI kit among its files");
@@ -1012,18 +1145,17 @@ static unsigned int fetch_job(ctx_t *c, job_t *j, const char *work)
 }
 
 /* PRODUCT INSTALL in a subprocess on this terminal. 0 or a message value. */
-static unsigned int install_job(job_t *j, int confirm)
+static unsigned int install_kit(job_t *j, const char *kitfile)
 {
     char producer[32], base[16], product[64], cmd[600];
     struct dsc$descriptor_s dc;
     unsigned int st, status = 0, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD;
-    if (!vu_kitfile_parse(j->kitfile, producer, sizeof producer, base, sizeof base, product,
+    if (!vu_kitfile_parse(kitfile, producer, sizeof producer, base, sizeof base, product,
                           sizeof product))
-        return msg(VU__KIT, 2, j->kitfile, "is not a producer-base-product-version kit name");
+        return msg(VU__KIT, 2, kitfile, "is not a producer-base-product-version kit name");
     /* SIGNED_KIT: PCSI refuses a kit whose VSI signature doesn't validate (D18).
      * NOCONFIRM skips only PCSI's "these products?" question: the user has already
      * confirmed VUPDATE's list (or gave /NOCONFIRM). Kit questions are still asked. */
-    (void)confirm;
     snprintf(cmd, sizeof cmd,
              "PRODUCT INSTALL %s /PRODUCER=%s /BASE_SYSTEM=%s /SOURCE=%s%s /OPTIONS=(SIGNED_KIT,NOCONFIRM)",
              product, producer, base, j->dir,
@@ -1036,9 +1168,20 @@ static unsigned int install_job(job_t *j, int confirm)
         char why[80];
         snprintf(why, sizeof why, "PRODUCT INSTALL failed (%%X%08X); the kit is kept",
                  (st & 1) ? status : st);
-        return msg(VU__KIT, 2, j->e->kitname, why);
+        return msg(VU__KIT, 2, product, why);
     }
     return 0;
+}
+
+/* The archive's kits to go first, then the kit itself, each its own PRODUCT INSTALL. */
+static unsigned int install_job(job_t *j)
+{
+    unsigned int st;
+    int x;
+    for (x = 0; x < j->nfirst; x++)
+        if ((st = install_kit(j, j->first[x])) != 0)
+            return st;
+    return install_kit(j, j->kitfile);
 }
 
 static unsigned int do_upgrade(void)
@@ -1106,28 +1249,39 @@ static unsigned int do_upgrade(void)
         if (!found)
             msg(VU__NOTFOUND, 2, names[m], "no update or patch for this node in the catalogue");
     }
-    /* Prerequisites not installed yet, transitively. */
+    /* Prerequisites not installed yet, transitively: the portal's list plus the
+     * KIT DEPENDENCIES of each kit's release notes (N22). */
     for (i = 0; i < njobs && !st; i++) {
         int p;
+        if ((st = notes_prereqs(&c, &jobs[i])) != 0)
+            break;
         for (p = 0; p < jobs[i].d.nprereq && !st; p++) {
             const vu_prereq *q = &jobs[i].d.prereq[p];
-            if (vu_prereq_installed(&c.inv, q->kitname) || job_index(q->package_number) >= 0
+            if (vu_prereq_installed(&c.inv, q->kitname)
+                || (q->package_number && job_index(q->package_number) >= 0)
                 || !prereq_applies(&c, q))
                 continue;
             for (k = 0; k < c.cat.n; k++)
-                if (c.cat.e[k].package_number == q->package_number)
+                if (q->package_number && c.cat.e[k].package_number == q->package_number)
                     break;
-            if (k == c.cat.n)
-                st = msg(VU__KIT, 2, q->kitname, "is a prerequisite but not in the catalogue");
-            else
+            if (k == c.cat.n) {
+                /* Not in the catalogue and not installed: release notes also name
+                 * alternatives ("L1A_x or L2A_x") and recommended kits (N22), so
+                 * this only warns; VSI's kit procedure checks what is required. */
+                if (!q->package_number)
+                    printf("  note: %s names %s, which is neither installed nor in the "
+                           "catalogue\n", jobs[i].e->kitname, q->kitname);
+                else
+                    jobs[i].blocked = "needs a kit that isn't in the catalogue";
+            } else
                 st = add_job(&c, &c.cat.e[k], 1);
         }
     }
     if (st)
         goto out;
-    /* /NOREBOOT: drop kits that need a restart, then (repeatedly) kits that need a
-     * dropped kit first. */
-    if (!reboot_ok && njobs) {
+    /* Drop kits that can't be installed (blocked), with /NOREBOOT those that need
+     * a restart, then (repeatedly) kits that need a dropped kit first. */
+    if (njobs) {
         int changed = 1;
         size_t w;
         char *drop = (char *)calloc(njobs, 1);
@@ -1136,7 +1290,7 @@ static unsigned int do_upgrade(void)
             goto out;
         }
         for (i = 0; i < njobs; i++)
-            drop[i] = (char)jobs[i].reboot;
+            drop[i] = jobs[i].blocked ? 3 : (!reboot_ok && jobs[i].reboot) ? 1 : 0;
         while (changed) {
             changed = 0;
             for (i = 0; i < njobs; i++) {
@@ -1155,8 +1309,10 @@ static unsigned int do_upgrade(void)
         }
         for (i = 0, w = 0; i < njobs; i++) {
             if (drop[i]) {
-                printf("  skipped (/NOREBOOT): %s%s\n", jobs[i].e->kitname,
-                       drop[i] == 2 ? " (needs a kit that needs a reboot)" : " (needs a reboot)");
+                printf("  skipped: %s (%s)\n", jobs[i].e->kitname,
+                       drop[i] == 3   ? jobs[i].blocked
+                       : drop[i] == 2 ? "needs a kit that is skipped"
+                                      : "needs a reboot; /NOREBOOT");
                 continue;
             }
             if (w != i)
@@ -1214,30 +1370,56 @@ static unsigned int do_upgrade(void)
         goto out;
     }
 
-    for (i = 0; i < njobs; i++) {
-        job_t *j = &jobs[order[i]];
-        printf("\n[%lu/%lu] %s\n", (unsigned long)(i + 1), (unsigned long)njobs, j->e->kitname);
-        if ((st = fetch_job(&c, j, work)) != 0)
+    /* A kit that fails is reported and kept; the run goes on with the kits that
+     * don't need it (D21). */
+    {
+        char *failed = (char *)calloc(njobs, 1);
+        int nfail = 0;
+        if (!failed) {
+            st = msg(VU__FAILED, 1, "out of memory", 0);
             goto out;
-        if (download_only) {
+        }
+        for (i = 0; i < njobs; i++) {
+            job_t *j = &jobs[order[i]];
+            int p, needs_failed = 0;
+            printf("\n[%lu/%lu] %s\n", (unsigned long)(i + 1), (unsigned long)njobs,
+                   j->e->kitname);
+            for (p = 0; p < j->d.nprereq; p++) {
+                int x = j->d.prereq[p].package_number
+                            ? job_index(j->d.prereq[p].package_number) : -1;
+                if (x >= 0 && failed[x])
+                    needs_failed = 1;
+            }
+            if (needs_failed) {
+                printf("  skipped: needs a kit that failed above\n");
+                failed[order[i]] = 1;
+                nfail++;
+                continue;
+            }
+            if (fetch_job(&c, j, work) != 0 || (!download_only && install_job(j) != 0)) {
+                failed[order[i]] = 1;
+                nfail++;
+                continue;
+            }
+            if (!download_only)
+                remove_dir(j->dir);
             done++;
-            continue;
+            if (!download_only && j->reboot) {
+                msg(VU__REBOOT, 1, j->e->kitname, 0);
+                if (i + 1 < njobs) {
+                    nfail += (int)(njobs - i - 1);
+                    break;
+                }
+            }
         }
-        if ((st = install_job(j, confirm)) != 0)
-            goto out;
-        remove_dir(j->dir);
-        done++;
-        if (j->reboot && i + 1 < njobs) {
-            st = msg(VU__REBOOT, 1, j->e->kitname, 0);
-            goto out;
-        }
-        if (j->reboot)
-            msg(VU__REBOOT, 1, j->e->kitname, 0);
+        free(failed);
+        if (nfail)
+            st = msg_nn(VU__PARTIAL, (unsigned int)done, (unsigned int)nfail);
+        else if (download_only)
+            st = msg_ns(VU__DOWNLOADED, (unsigned int)done, work);
+        else
+            st = msg_n(VU__INSTALLED, (unsigned int)done);
     }
-    if (download_only)
-        st = msg_ns(VU__DOWNLOADED, (unsigned int)done, work);
-    else
-        st = msg_n(VU__INSTALLED, (unsigned int)done);
 out:
     free(jobs);
     jobs = NULL;

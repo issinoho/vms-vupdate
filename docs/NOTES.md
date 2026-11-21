@@ -101,3 +101,13 @@ Patch Install Val`, kit directory removed afterwards. PCSI records V1.0, while t
 `VMS842L2A_TIMEZONE-V0100-4` (and its version field V1.0-4) read as V1.0-4, so CHECK still offered it.
 The `-4` is the PCSI kit type (the kit file is `...-V0100--4`). The decoder now drops a lone digit
 after the version of an OpenVMS patch-family name; only the TIMEZONE kits have one (x86, Alpha).
+
+N22. **The portal's prerequisite lists are incomplete; the release notes are not.** Phase 3 run
+(2026-11-21, user at AXPBOX): 13 patches installed, then VMS842L2A_LCKMGRSTB V2.0 failed in VSI's kit
+procedure: `%VSIKIT-F-NOPREREQ ... only valid if the VMS842L2A_LCKMGR-V0100 kit has been applied`
+(PCSI recovery pass ran, nothing left half-installed). The portal lists only NOTARY for it. Every
+patch's .TXT release notes have a "4  KIT DEPENDENCIES:" section, which also names e.g. SYS V3.0
+for FILESYS. Its entries can be alternatives ("L1A_x or L2A_x"), recommended rather than required
+(PWDMGMT: PCSI V1.0), spelt with "_V0200" for "-V0200", or shipped inside the kit's own container:
+VMS842L2A_PWDMGMT-V0200.ZIPEXE (a real self-extracting archive) holds PWDMGMT plus the L1A and L2A
+PCSI V1.0 kits, and VMS842L2A_PCSI is not in the portal catalogue.

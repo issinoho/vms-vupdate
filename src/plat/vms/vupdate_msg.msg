@@ -40,5 +40,6 @@ REBOOT      <!AZ needs a reboot: reboot before installing more kits>/FAO=1
 MD5         <!AZ: MD5 mismatch, expected !AZ>/FAO=2
 KIT         <!AZ: !AZ>/FAO=2
 ABORTED     <!AZ>/FAO=1
+PARTIAL     <!UL kit!%S done, !UL failed or not reached (see above; failed kits are kept)>/FAO=2
 
         .END

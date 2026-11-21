@@ -102,3 +102,12 @@ D20 (2026-11-21, phase 3). **Help**: a DCL help library built from src/plat/vms/
 VUPDATE$ROOT:[HELP]VUPDATE.HLB, shown by `VUPDATE HELP [topic...]` (LBR$OUTPUT_HELP, prompting on a
 terminal). Inserting it into SYS$HELP:HELPLIB.HLB, for plain `HELP VUPDATE`, is a kit-install
 question (system-wide: ask the user, phase 4).
+
+D21 (2026-11-21, phase 3). **Release-note dependencies and failures.** UPGRADE fetches each kit's
+release notes (cached in [CACHE]NOTES_<file>.TXT) and adds the KIT DEPENDENCIES to its prerequisites,
+resolved to the newest applicable catalogue kit at that version or later. Ones made for another
+OpenVMS version are skipped as before; ones neither installed nor in the catalogue only warn (VSI's
+kit procedure enforces what's really required). When an archive holds several kits, the one for the
+product is installed, preceded by any the notes name for this version that aren't installed (each
+its own PRODUCT INSTALL, as the notes ask). A kit that fails is kept and reported; the run carries on
+with kits that don't need it, and ends with VU__PARTIAL (error).

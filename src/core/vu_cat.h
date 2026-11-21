@@ -86,4 +86,11 @@ int vu_text_is_security(const char *text);
 int vu_arch_from_name(const char *arch_name);
 const char *vu_arch_portal_name(int arch); /* "X86", "I64", "AXP" */
 
+/* Kit dependencies from a patch kit's release notes (the .TXT file): the kit
+ * names under the "KIT DEPENDENCIES" heading, up to the next numbered heading.
+ * The portal's prereq list can miss some (N22). Names are normalised to the
+ * portal form ("VMS842L2A_NOTARY_V0200" -> "VMS842L2A_NOTARY-V0200"). Returns
+ * the number found (0 when the section is absent or says None). */
+int vu_notes_dependencies(const char *text, char names[][64], int max);
+
 #endif
