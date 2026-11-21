@@ -42,13 +42,17 @@ libssh2 (119), LDAP (37+2) and zlib symbols undefined. Alpha's is 8.0.1. See D3.
 N8. VSI C resolves `#include <curl/curl.h>` as `CURL:CURL.H`: define the logical CURL as the
 directory holding curl.h; /INCLUDE doesn't do it.
 
-N9. Linking vms-curl's CURLLIB.OLB gives `%LINK-W-WRNERS` (compile warnings recorded in curl's
-modules: vtls, sha256, openssl ...), as in vms-curl's own build. build_vms.com accepts that
+N9. Linking vms-curl's CURLLIB.OLB gives `%LINK-W-WRNERS` on Alpha and `%ILINK-W-COMPWARN` on x86
+(compile warnings recorded in curl's modules: vtls, sha256, openssl ...), as in vms-curl's own build. build_vms.com accepts that
 warning only, and fails on UDFSYM/USEUNDEF/-E-/-F-.
 
-N10. Alpha probe 2026-11-21: libcurl 8.22.0 + OpenSSL 3.0.22; sp.vmssoftware.com 401 (no token),
+N10. Probes 2026-11-21, x86 E9.2-4 and Alpha V8.4-2L2 alike: libcurl 8.22.0 + OpenSSL 3.0.22; sp.vmssoftware.com 401 (no token),
 kc.teracloud.com realm document 200, using curl.se's cacert-2026-09-25.pem.
 
 N11. The Alpha node (V8.4-2L2) has NOTARY V2.0, DPML V2.0 and RTL V10.0 installed and is missing 38 L2
 patches (SYS V5.0, DCL V4.0, RMS V6.2 ...): the L1 patches were removed by the L1 -> L2 upgrade
 on 2026-11-08 (PRODUCT SHOW HISTORY). The x86 node (E9.2-4) has no applicable patches on the portal yet.
+
+N12. A concealed rooted logical (ZLIB$ROOT) can't be defined on top of another rooted logical
+(USER$ROOT:): ILINK-F-OPENIN / RMS-F-DEV. Resolve with F$PARSE(...,"NO_CONCEAL") first, as
+vms-curl's build.sh does (tools/env.com.example).

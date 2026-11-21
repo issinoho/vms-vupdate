@@ -58,13 +58,14 @@ Like SSHLOGS in vms-dcl-tools.
 
 ## Phases
 0. **Done 2026-11-21.** Repo scaffold, CLD draft, build_vms.com for x86 and Alpha, core library
-   + unit tests (Linux, x86, Alpha), libcurl link probe (vms-curl CURLLIB.OLB + SSL3).
+   + unit tests (Linux, x86, Alpha), libcurl link probe on both (vms-curl CURLLIB.OLB + SSL3:
+   libcurl 8.22.0, OpenSSL 3.0.22, both portal hosts reached).
 1. LOGIN/LOGOUT/CHECK on the x86 node, then the Alpha. Check the output against tests/unit/vucheck on
    saved replies.
 2. SHOW + UPGRADE with /DOWNLOAD_ONLY, then a real install of a low-risk kit (ask first; LUA
    turned out to be current, see D5) with SAVE_RECOVERY_DATA.
-3. Patch path: prereq ordering + security flag, tested on the Alpha (V8.4-2L2 has SYS-V0500 etc.). X86VMS
-   E9.2-4 has no patches yet (the x86 node).
+3. Patch path: prereq ordering + security flag, tested on the Alpha (V8.4-2L2 has SYS-V0500 etc.). The x86 node
+   (E9.2-4) has no patches yet.
 4. Nightly batch, x86 + Alpha kits, release per the vms-* family process.
 Not planned: IA64.
 

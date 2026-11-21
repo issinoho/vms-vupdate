@@ -4,7 +4,7 @@ A winget-style updater for OpenVMS: it compares the installed PCSI products with
 Service Platform catalogue and offers newer kits, OpenVMS patches and security fixes, then
 downloads, verifies and installs them with `PRODUCT INSTALL`. For OpenVMS x86-64 and Alpha.
 
-**Status: in development (phase 0 of 4).** The matching core and its tests run on Linux,
+**Status: in development (phase 0 of 4 done).** The matching core and its tests run on Linux,
 x86-64 and Alpha; the DCL command doesn't exist yet. See [docs/PLAN.md](docs/PLAN.md).
 
 Needs a VSI Service Platform account (sp.vmssoftware.com). VUPDATE is not a VSI product and is
