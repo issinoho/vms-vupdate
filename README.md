@@ -1,4 +1,11 @@
+<p align="center">
+  <img src="docs/images/banner.svg" alt="VUPDATE for OpenVMS: a DECterm window where VUPDATE CHECK lists two OpenVMS patches, one a security fix and one needing a reboot, and an OpenSSH update, then UPGRADE/PATCHES/NOREBOOT is typed, beside a kit-with-an-up-arrow mark" width="100%">
+</p>
+
 # VUPDATE for OpenVMS
+
+![OpenVMS](https://img.shields.io/badge/OpenVMS-x86--64%20%7C%20Alpha-blue)
+[![License](https://img.shields.io/github/license/issinoho/vms-vupdate)](LICENSE)
 
 A winget-style updater for OpenVMS: it compares the installed PCSI products with the VSI
 Service Platform catalogue and lists newer kits, OpenVMS patches and security fixes, then
@@ -43,6 +50,12 @@ tools/kit.sh <node>       # node: clean build and PCSI kit, fetched to out/kits/
 
 libcurl comes from [vms-curl](https://github.com/issinoho/vms-curl)'s static library and is linked
 into the image, with zlib and zstd; OpenSSL is VSI SSL3. docs/ has the plan, decisions and notes.
+
+## Artwork
+
+`docs/images/banner.svg` and `docs/images/icon.svg` were made for this project in the style of
+classic DECwindows and VT terminals, like those of its sibling ports. The terminal output in the
+banner is illustrative: its node, catalogue size and versions are made up.
 
 ## Licence
 
