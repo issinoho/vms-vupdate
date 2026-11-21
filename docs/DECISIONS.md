@@ -111,3 +111,9 @@ kit procedure enforces what's really required). When an archive holds several ki
 product is installed, preceded by any the notes name for this version that aren't installed (each
 its own PRODUCT INSTALL, as the notes ask). A kit that fails is kept and reported; the run carries on
 with kits that don't need it, and ends with VU__PARTIAL (error).
+
+D22 (2026-11-21, phase 3). **One reboot, and a second try.** UPGRADE no longer stops after a kit
+that needs a reboot (VSI's kit dialogue: several ECO kits may be installed before one reboot); it lists
+them at the end with VU__REBOOT. Install failures are retried once after all other kits, because VSI
+kits enforce prerequisites the portal and notes don't list (N23) and PCSI rolls a failure back.
+Replaces the stop-after-reboot rule of D18.

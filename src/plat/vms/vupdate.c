@@ -508,6 +508,17 @@ static int same_name(const char *a, const char *b)
     return !*a && !*b;
 }
 
+/* A product name as typed: the PCSI name, or for an OpenVMS patch family the part
+ * after the family code ("MISC" for VMS842L2A_MISC). */
+static int name_matches(const char *product, const char *typed)
+{
+    const char *u;
+    if (same_name(product, typed))
+        return 1;
+    return vu_is_os_patch_family(product) && (u = strchr(product, '_')) != NULL
+           && same_name(u + 1, typed);
+}
+
 /* A package detail through the 24 h cache. Returns 0 or a message value. */
 static unsigned int get_detail(ctx_t *c, long num, vu_detail *d)
 {
@@ -748,6 +759,15 @@ static unsigned int do_show(void)
     if ((st = ctx_open(&c)) != 0) {
         ctx_close(&c);
         return st;
+    }
+    /* A short patch name ("MISC") means this OpenVMS version's family kit. */
+    for (i = 0; i < c.cat.n; i++) {
+        char fam[16];
+        if (!same_name(c.cat.e[i].product, name) && name_matches(c.cat.e[i].product, name)
+            && vu_patch_family_os(c.cat.e[i].product, fam, sizeof fam) && same_name(fam, c.os)) {
+            strncpy(name, c.cat.e[i].product, sizeof name - 1);
+            break;
+        }
     }
     /* The planned target, else the newest applicable kit, else the newest kit. */
     for (i = 0; i < c.pl.n; i++)
@@ -1222,7 +1242,7 @@ static unsigned int do_upgrade(void)
         const vu_finding *f = &c.pl.f[i];
         int named = 0;
         for (m = 0; m < nnames; m++)
-            if (f->entry && same_name(f->entry->product, names[m]))
+            if (f->entry && name_matches(f->entry->product, names[m]))
                 named = 1;
         if (!vu_finding_actionable(f->kind)
             || !(all || named || (only_sec && (c.flags[i] & VU_FL_SECURITY))
@@ -1238,11 +1258,11 @@ static unsigned int do_upgrade(void)
     for (m = 0; m < nnames && !st; m++) {
         int found = 0;
         for (i = 0; i < njobs; i++)
-            if (same_name(jobs[i].e->product, names[m]))
+            if (name_matches(jobs[i].e->product, names[m]))
                 found = 1;
         for (i = 0; i < c.pl.n && !found; i++)
             if (c.pl.f[i].kind == VU_F_CURRENT && c.pl.f[i].installed
-                && same_name(c.pl.f[i].installed->name, names[m])) {
+                && name_matches(c.pl.f[i].installed->name, names[m])) {
                 msg(VU__NOTFOUND, 2, names[m], "is up to date");
                 found = 1;
             }
@@ -1371,48 +1391,85 @@ static unsigned int do_upgrade(void)
     }
 
     /* A kit that fails is reported and kept; the run goes on with the kits that
-     * don't need it (D21). */
+     * don't need it (D21). Failed installs are tried once more at the end: VSI
+     * kits check prerequisites the portal and release notes don't always list
+     * (MISC needs FILESYS and UTILITY, N23), and PCSI rolls a failure back.
+     * Kits needing a reboot don't stop the run: VSI's kits say several may be
+     * installed before one reboot; the reboot notice comes at the end. */
     {
-        char *failed = (char *)calloc(njobs, 1);
-        int nfail = 0;
-        if (!failed) {
+        char *state = (char *)calloc(njobs, 1); /* 0 todo, 1 done, 2 failed, 3 fetch failed */
+        int pass, nfail = 0, nreboot = 0, progress = 1;
+        if (!state) {
             st = msg(VU__FAILED, 1, "out of memory", 0);
             goto out;
         }
-        for (i = 0; i < njobs; i++) {
-            job_t *j = &jobs[order[i]];
-            int p, needs_failed = 0;
-            printf("\n[%lu/%lu] %s\n", (unsigned long)(i + 1), (unsigned long)njobs,
-                   j->e->kitname);
-            for (p = 0; p < j->d.nprereq; p++) {
-                int x = j->d.prereq[p].package_number
-                            ? job_index(j->d.prereq[p].package_number) : -1;
-                if (x >= 0 && failed[x])
-                    needs_failed = 1;
-            }
-            if (needs_failed) {
-                printf("  skipped: needs a kit that failed above\n");
-                failed[order[i]] = 1;
-                nfail++;
-                continue;
-            }
-            if (fetch_job(&c, j, work) != 0 || (!download_only && install_job(j) != 0)) {
-                failed[order[i]] = 1;
-                nfail++;
-                continue;
-            }
-            if (!download_only)
-                remove_dir(j->dir);
-            done++;
-            if (!download_only && j->reboot) {
-                msg(VU__REBOOT, 1, j->e->kitname, 0);
-                if (i + 1 < njobs) {
-                    nfail += (int)(njobs - i - 1);
+        for (pass = 0; pass < 2 && progress; pass++) {
+            progress = 0;
+            if (pass == 1) {
+                int again = 0;
+                for (i = 0; i < njobs; i++)
+                    if (state[order[i]] == 2)
+                        again++;
+                if (!again || download_only)
                     break;
+                printf("\nTrying the %d failed kit%s again, now that the others are in:\n", again,
+                       again == 1 ? "" : "s");
+            }
+            for (i = 0; i < njobs; i++) {
+                size_t ji = order[i];
+                job_t *j = &jobs[ji];
+                int p, needs_failed = 0;
+                if (state[ji] == 1 || state[ji] == 3 || (pass == 1 && state[ji] != 2))
+                    continue;
+                for (p = 0; p < j->d.nprereq; p++) {
+                    int x = j->d.prereq[p].package_number
+                                ? job_index(j->d.prereq[p].package_number) : -1;
+                    if (x >= 0 && state[x] >= 2)
+                        needs_failed = 1;
                 }
+                printf("\n[%lu/%lu] %s\n", (unsigned long)(i + 1), (unsigned long)njobs,
+                       j->e->kitname);
+                if (needs_failed && pass == 1) {
+                    printf("  skipped: needs a kit that failed\n");
+                    continue;
+                }
+                if (needs_failed) {
+                    printf("  skipped for now: needs a kit that failed above\n");
+                    state[ji] = 2;
+                    continue;
+                }
+                if (!j->kitfile[0] && fetch_job(&c, j, work) != 0) {
+                    state[ji] = 3;
+                    continue;
+                }
+                if (!download_only && install_job(j) != 0) {
+                    state[ji] = 2;
+                    continue;
+                }
+                if (!download_only)
+                    remove_dir(j->dir);
+                state[ji] = 1;
+                progress = 1;
+                done++;
+                if (!download_only && j->reboot)
+                    nreboot++;
             }
         }
-        free(failed);
+        for (i = 0; i < njobs; i++)
+            if (state[i] != 1)
+                nfail++;
+        if (nreboot) {
+            printf("\nThese kits need a reboot before they take full effect:\n");
+            for (i = 0; i < njobs; i++)
+                if (state[order[i]] == 1 && jobs[order[i]].reboot)
+                    printf("  %s\n", jobs[order[i]].e->kitname);
+            msg(VU__REBOOT, 1, nreboot == 1 ? "the kit listed above" : "the kits listed above", 0);
+        }
+        if (!download_only && done)
+            printf("Kits may name post-installation steps (e.g. SET SERVER ACME_SERVER/RESTART):"
+                   " see their\nSpecial Installation Instructions in "
+                   "SYS$HELP:<kit>.RELEASE_NOTES.\n");
+        free(state);
         if (nfail)
             st = msg_nn(VU__PARTIAL, (unsigned int)done, (unsigned int)nfail);
         else if (download_only)

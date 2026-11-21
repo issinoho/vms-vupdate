@@ -98,10 +98,11 @@
    VUPDATE SHOW product [/FIELD_TEST] [/REFRESH]
 
  The product is the PCSI name (COBOL, OPENSSH) or a patch family
- (VMS842L2A_SYS).
+ (VMS842L2A_SYS, or just SYS for this OpenVMS version's kit).
 
 2 UPGRADE
- Downloads and installs kits: the products named, or a whole class with
+ Downloads and installs kits: the products named (a patch by its family
+ name, VMS842L2A_SYS, or just SYS), or a whole class with
  /ALL, /PATCHES, /UPDATES or /SECURITY. Kits they need first are added
  when not installed already, and everything is put in install order.
 
@@ -110,7 +111,9 @@
  the ZIP and runs PRODUCT INSTALL on your terminal (patches with
  /SAVE_RECOVERY_DATA, so PRODUCT UNDO PATCH can take them out again). The
  kit directory is deleted after a successful install and kept when one
- fails. VUPDATE stops after a kit that needs a reboot.
+ fails; a failed kit is tried once more after the others (VSI kits check
+ prerequisites the portal doesn't always list). Kits that need a reboot
+ don't stop the run: VUPDATE lists them at the end, for one reboot.
 
  Installing needs the privileges PRODUCT INSTALL needs.
 

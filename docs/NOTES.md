@@ -111,3 +111,12 @@ for FILESYS. Its entries can be alternatives ("L1A_x or L2A_x"), recommended rat
 (PWDMGMT: PCSI V1.0), spelt with "_V0200" for "-V0200", or shipped inside the kit's own container:
 VMS842L2A_PWDMGMT-V0200.ZIPEXE (a real self-extracting archive) holds PWDMGMT plus the L1A and L2A
 PCSI V1.0 kits, and VMS842L2A_PCSI is not in the portal catalogue.
+
+N23. Second /PATCHES/NOREBOOT run (2026-11-21, user at AXPBOX): 9 of 11 kits installed (LDAP, LMF, MIME,
+PRTSMB, PTHREAD, PCSI V1.0 then PWDMGMT from one archive, SHUTDOWN, SORT, TIMEZONE). MISC failed in VSI's
+kit procedure (needs FILESYS V1.0 and UTILITY V2.0; MISC's notes are a PDF, so unseen) and RMSDEF
+declined (`%VSIKIT-I-NOTNEEDED`: only with FILESYS), both rolled back. TIMEZONE's own dialogue says
+"This ECO kit requires a system reboot" while the portal's restart_required is 0: the portal flag
+is not authoritative. Post-install steps named by kits: SET SERVER ACME_SERVER/RESTART (LDAP, PWDMGMT),
+UCM RESTART (MISC), restart images using PTHREAD$RTL, @SYS$MANAGER:UTC$TIME_SETUP in the affected
+Canadian zones (TIMEZONE). PCSI-I-RETAIN: PWDMGMT kept the newer SYS$STARLET_C.TLB already there.

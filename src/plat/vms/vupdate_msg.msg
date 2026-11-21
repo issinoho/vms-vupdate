@@ -35,7 +35,7 @@ INSTALLED   <!UL kit!%S installed>/FAO=1
 NOTHING     <nothing to upgrade>
         .SEVERITY       WARNING
 NOTFOUND    <!AZ: !AZ>/FAO=2
-REBOOT      <!AZ needs a reboot: reboot before installing more kits>/FAO=1
+REBOOT      <a reboot is needed for !AZ: reboot the system when convenient>/FAO=1
         .SEVERITY       ERROR
 MD5         <!AZ: MD5 mismatch, expected !AZ>/FAO=2
 KIT         <!AZ: !AZ>/FAO=2
