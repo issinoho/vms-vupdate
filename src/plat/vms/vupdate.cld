@@ -1,5 +1,6 @@
-! vupdate.cld - DCL verb VUPDATE (draft, phase 0: syntax only, no image yet).
-!   VUPDATE LOGIN
+! vupdate.cld - DCL verb VUPDATE. Phase 1: LOGIN, LOGOUT and CHECK work;
+! SHOW and UPGRADE parse but report "not implemented yet".
+!   VUPDATE LOGIN [/USERNAME=e-mail]
 !   VUPDATE LOGOUT
 !   VUPDATE CHECK [/SECURITY] [/FIELD_TEST] [/ALL] [/REFRESH] [/OUTPUT=file]
 !   VUPDATE SHOW product
@@ -19,6 +20,7 @@ define verb VUPDATE
 
 define syntax VU_LOGIN
     parameter P1, label=ACTION, value(required, type=ACTIONS)
+    qualifier USERNAME, value(required)
 
 define syntax VU_LOGOUT
     parameter P1, label=ACTION, value(required, type=ACTIONS)

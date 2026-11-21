@@ -6,8 +6,8 @@ top=$(cd "$(dirname "$0")/.." && pwd)
 node=${1:?usage: push.sh <node>}
 v=$top/tools/vms.sh
 cd "$top"
-$v "$node" put build_vms.com LICENSE
-for d in probes src src/core src/third src/third/cjson tests tests/unit tests/data; do
+$v "$node" put build_vms.com dev_setup.com LICENSE
+for d in probes src src/core src/app src/plat src/plat/vms src/third src/third/cjson tests tests/unit tests/data; do
     files=$(find "$d" -maxdepth 1 -type f | sort)
     # shellcheck disable=SC2086
     $v "$node" put $files -- "$d"

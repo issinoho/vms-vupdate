@@ -40,7 +40,10 @@ change in reply shape as an error to report clearly, never guess.
 `make` (Linux: unit tests + `build/vucheck`). `build/vucheck <pss.txt> <cat.json> <os-ver>
 <X86|AXP> [field]` prints a plan from saved files. On the nodes: `tools/push.sh <node>` then
 `@build_vms TEST` (x86: `vms.sh x86 dcl '@build_vms TEST'`; Alpha: a batch job), and
-`tools/probe.sh <node>` for the libcurl/TLS probe (PROBE-OK).
+`tools/probe.sh <node>` for the libcurl/TLS probe (PROBE-OK). `tools/image.sh <node> [dcl-file]`
+runs TEST, builds the image (IMAGE-OK), runs `@dev_setup` (process VUPDATE verb, VUPDATE$ROOT =
+[.DEVROOT.]) and then the DCL in dcl-file. `tools/ptydrive.py <node> <script>` drives prompts
+that need a terminal (LOGIN); only ever with made-up accounts. A real LOGIN is the user's to type.
 
 ## OpenVMS
 

@@ -56,3 +56,21 @@ replies stay in git-ignored tests/data/real/ and add checks when present.
 
 D12 (2026-11-21). **JSON: cJSON 1.7.18**, vendored unmodified in src/third/cjson (MIT), compiled
 without our warning rules.
+
+D13 (2026-11-21, phase 1). **Credential store: AES-256-GCM** (OpenSSL libcrypto, already linked
+for curl) under SHA-256 of a label, the node key (SCSNODE | SCSSYSTEMID | HW_NAME) and a random
+salt; text file (magic line + hex). Rejected: plain XOR scrambling as VSP does (no tamper check,
+and it reads as security it isn't). Still obfuscation (D2): the key comes from values any process
+can read, so file protection (owner only) is the real barrier; the sealing keeps plaintext out of
+backups, makes a copied file useless on another node, and detects edits. Changing SCSNODE means
+VUPDATE LOGIN again.
+
+D14 (2026-11-21, phase 1). **Messages and exit status**: a MESSAGE file (facility VUPDATE, 1903)
+linked into the image. CHECK exits with VU__CURRENT (success) when there is nothing to do and
+VU__UPDATES (informational) when there is, so batch jobs can test $STATUS. The C code computes the
+condition values itself (VU_MSG in vupdate.c), checked against MESSAGE/LIST (N13).
+
+D15 (2026-11-21, phase 1). **CHECK signs in only when it has to fetch**: the catalogue is cached for
+1 h and package details for 24 h in VUPDATE$ROOT:[CACHE] (/REFRESH skips the cache). A CHECK answered
+from the cache needs neither credentials nor the network. Patch details are fetched for the
+D7 minos merge and for the flags (security text, restart_required) of the patches reported.

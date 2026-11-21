@@ -68,6 +68,14 @@ int main(int argc, char **argv)
         return 2;
     }
     arch = vu_arch_from_name(strcmp(argv[4], "AXP") == 0 ? "Alpha" : argv[4]);
+    {
+        size_t nd = 0;
+        for (i = 0; i < cat.n; i++)
+            if (vu_patch_needs_detail(&cat.e[i], argv[3]))
+                nd++;
+        printf("(%lu catalogue rows; %lu patch details to fetch before planning)\n",
+               (unsigned long)cat.n, (unsigned long)nd);
+    }
     if (vu_plan_build(&inv, &cat, argv[3], arch, argc > 5 ? VU_OPT_FIELD_TEST : 0, &pl) != 0)
         return 2;
     for (i = 0; i < pl.n; i++) {

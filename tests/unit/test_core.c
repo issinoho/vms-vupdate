@@ -1,9 +1,11 @@
 /* test_core.c - unit tests for src/core, run on Linux (make test) and on the
  * nodes (@build_vms TEST). Fixtures are read from tests/data/; files in
  * tests/data/real/ (git-ignored: real portal replies) add checks when present. */
+#include "vu_auth.h"
 #include "vu_cat.h"
 #include "vu_pcsi.h"
 #include "vu_plan.h"
+#include "vu_report.h"
 #include "vu_ver.h"
 
 #include <stdio.h>
@@ -402,6 +404,76 @@ static void test_order(void)
     CHECK(order[0] == 0 && order[1] == 1);
 }
 
+static void test_auth(void)
+{
+    char b[256];
+    vu_token t;
+    CHECK(vu_form_escape("a.b-c_d*", b, sizeof b) == 8);
+    CHECK_STR(b, "a.b-c_d*");
+    CHECK(vu_form_escape("user@example.com", b, sizeof b) > 0);
+    CHECK_STR(b, "user%40example.com");
+    CHECK(vu_form_escape("p&w=d +%", b, sizeof b) > 0);
+    CHECK_STR(b, "p%26w%3Dd%20%2B%25");
+    CHECK(vu_form_escape("\xc3\xa9", b, sizeof b) > 0); /* UTF-8 e-acute */
+    CHECK_STR(b, "%C3%A9");
+    CHECK(vu_form_escape("abcd", b, 4) == -1);
+    CHECK(vu_form_escape("abc", b, 4) == 3);
+    CHECK(vu_token_body("u@x.org", "a&b", b, sizeof b) > 0);
+    CHECK_STR(b, "client_id=sp&grant_type=password&username=u%40x.org&password=a%26b");
+    CHECK(vu_token_body("u@x.org", "a&b", b, 40) == -1);
+
+    CHECK(vu_token_parse("{\"access_token\":\"eyJ.x.y\",\"expires_in\":180,"
+                         "\"token_type\":\"Bearer\"}", &t) == 0);
+    CHECK_STR(t.access, "eyJ.x.y");
+    CHECK(t.expires_in == 180);
+    CHECK(vu_token_parse("{\"error\":\"invalid_grant\",\"error_description\":"
+                         "\"Invalid user credentials\"}", &t) == -3);
+    CHECK_STR(t.error, "Invalid user credentials");
+    CHECK(t.access[0] == '\0');
+    CHECK(vu_token_parse("{\"error\":\"unauthorized_client\"}", &t) == -3);
+    CHECK_STR(t.error, "unauthorized_client");
+    CHECK(vu_token_parse("<html>bad gateway</html>", &t) == -1);
+    CHECK(vu_token_parse("{\"x\":1}", &t) == -1);
+}
+
+static void test_report(void)
+{
+    vu_product p;
+    vu_entry e;
+    vu_finding f;
+    char b[160];
+    memset(&p, 0, sizeof p);
+    memset(&e, 0, sizeof e);
+    strcpy(p.name, "COBOL");
+    strcpy(p.ver, "V3.3-2");
+    strcpy(e.product, "COBOL");
+    strcpy(e.ver, "V3.3-3");
+    f.kind = VU_F_UPDATE;
+    f.installed = &p;
+    f.entry = &e;
+    vu_report_line(&f, 0, b, sizeof b);
+    CHECK_STR(b, "  COBOL                V3.3-2           -> V3.3-3          ");
+    strcpy(e.ver, "A3.4-1");
+    vu_report_line(&f, VU_FL_SECURITY, b, sizeof b);
+    CHECK_STR(b, "  COBOL                V3.3-2           -> A3.4-1           field test, security");
+    f.kind = VU_F_PATCH;
+    f.installed = NULL;
+    strcpy(e.product, "VMS842L2A_SYS");
+    strcpy(e.ver, "V5.0");
+    vu_report_line(&f, VU_FL_SECURITY | VU_FL_REBOOT | VU_FL_DETAIL, b, sizeof b);
+    CHECK_STR(b, "  VMS842L2A_SYS        (none)           -> V5.0             security, reboot");
+    f.kind = VU_F_CURRENT;
+    f.installed = &p;
+    vu_report_line(&f, 0, b, sizeof b);
+    CHECK_STR(b, "  COBOL                V3.3-2");
+    f.kind = VU_F_NOTINCAT;
+    f.entry = NULL;
+    vu_report_line(&f, 0, b, sizeof b);
+    CHECK_STR(b, "  COBOL                V3.3-2");
+    CHECK(vu_finding_actionable(VU_F_PATCH) && !vu_finding_actionable(VU_F_CURRENT));
+    CHECK(strcmp(vu_report_heading(VU_F_PATCH), "Patches") == 0);
+}
+
 /* Real portal replies, when present (Linux developer runs only). */
 static void test_real(void)
 {
@@ -431,6 +503,8 @@ int main(void)
     test_plan_axp();
     test_plan_x86();
     test_order();
+    test_auth();
+    test_report();
     test_real();
     printf("%d checks, %d failed\n", checks, fails);
     return fails ? EXIT_FAILURE : EXIT_SUCCESS;

@@ -56,3 +56,17 @@ on 2026-11-08 (PRODUCT SHOW HISTORY). The x86 node (E9.2-4) has no applicable pa
 N12. A concealed rooted logical (ZLIB$ROOT) can't be defined on top of another rooted logical
 (USER$ROOT:): ILINK-F-OPENIN / RMS-F-DEV. Resolve with F$PARSE(...,"NO_CONCEAL") first, as
 vms-curl's build.sh does (tools/env.com.example).
+
+N13. MESSAGE sets the facility-specific bit (%X8000) as well as the customer bit (bit 27): VUPDATE
+CURRENT is %X0F6F8009, not %X0F6F0009. MESSAGE/LIST shows each value. Observed x86, 2026-11-21.
+
+N14. In DCL an unquoted `@` in a qualifier value starts an indirect command file:
+`VUPDATE LOGIN/USERNAME=a@b.c` fails with DCL-E-OPENIN for `b.c`. Quote it: `/USERNAME="a@b.c"`.
+
+N15. Keycloak answers a password grant for an unknown user with HTTP 401 and
+`{"error":"invalid_grant","error_description":"Invalid user credentials"}` (made-up account
+vupdate-test@example.invalid; x86 and Alpha, 2026-11-21). libcurl takes the CA bundle as a VMS file
+spec (VUPDATE$ROOT:[DATA]CACERT.PEM) on both.
+
+N16. Spawned `PRODUCT SHOW PRODUCT * /FULL` (LIB$SPAWN, output to a SYS$SCRATCH file) works in
+CHECK, and a 120-block single-line JSON cache file (Stream_LF) reads back with fread on x86.
