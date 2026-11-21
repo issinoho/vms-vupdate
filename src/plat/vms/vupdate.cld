@@ -4,7 +4,8 @@
 !   VUPDATE CHECK [/SECURITY] [/FIELD_TEST] [/ALL] [/REFRESH] [/OUTPUT=file]
 !   VUPDATE SHOW product [/FIELD_TEST] [/REFRESH]
 !   VUPDATE UPGRADE [product[,...]] [/ALL] [/PATCHES] [/UPDATES] [/SECURITY]
-!                   [/NOREBOOT] [/NOCONFIRM] [/FIELD_TEST] [/DOWNLOAD_ONLY]
+!                   [/NOREBOOT] [/NOCONFIRM] [/DISCARD_RECOVERY_DATA]
+!                   [/FIELD_TEST] [/DOWNLOAD_ONLY]
 !                   [/WORK=directory] [/REFRESH]
 !   VUPDATE HELP [topic...]
 !   VUPDATE VERSION
@@ -51,6 +52,7 @@ define syntax VU_UPGRADE
     qualifier PATCHES
     qualifier UPDATES
     qualifier REBOOT, default
+    qualifier DISCARD_RECOVERY_DATA
     qualifier CONFIRM, default
     qualifier FIELD_TEST
     qualifier DOWNLOAD_ONLY

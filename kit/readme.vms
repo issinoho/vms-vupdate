@@ -42,6 +42,15 @@ at the end (VSI kits check prerequisites the portal doesn't list). Kits that
 need a reboot don't stop the run: they are listed at the end, for one reboot.
 VUPDATE never installs an OpenVMS upgrade; it reports one.
 
+Patch recovery data: installing any full kit (a product update such as
+OPENSSH, not a patch) makes PCSI delete the saved recovery data of every
+patch, so PRODUCT UNDO PATCH can no longer take them out. VUPDATE installs
+full kits before patches where it can, lists the patches that would lose
+their recovery data and asks, even with /NOCONFIRM; in a batch job it
+installs no full kit while recovery data exists unless /DISCARD_RECOVERY_DATA
+is given. The same applies to installing any other full kit by hand, this
+one included.
+
 Nightly check
 -------------
     $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY START [hh:mm]   ! default 02:00

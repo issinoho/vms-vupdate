@@ -71,6 +71,7 @@ FILE *fdopen(int fd, const char *mode);
 #define VU__KIT VU_MSG(22, STS$K_ERROR)
 #define VU__ABORTED VU_MSG(23, STS$K_ERROR)
 #define VU__PARTIAL VU_MSG(24, STS$K_ERROR)
+#define VU__RECOVERY VU_MSG(25, STS$K_ERROR)
 
 #define CAT_MAX_AGE 3600
 #define DETAIL_MAX_AGE 86400
@@ -400,30 +401,41 @@ static unsigned int do_logout(void)
 /* ---------- CHECK ---------- */
 
 /* PRODUCT SHOW PRODUCT * /FULL in a subprocess, its output in a scratch file. */
-static unsigned int inventory(vu_inventory *inv)
+/* Run a DCL command in a subprocess and return its output (malloc'd, or NULL),
+ * with *status its completion status. NOCLISYM: a user's PRODUCT symbol must not
+ * run instead. NOLOGNAM: the caller's process logicals are not copied; a
+ * user-mode SYS$OUTPUT (DEFINE/USER before VUPDATE, as the nightly job does)
+ * would otherwise receive the output instead of our file (N25). */
+static char *capture(const char *cmd, unsigned int *status)
 {
-    static const char cmd[] = "PRODUCT SHOW PRODUCT * /FULL";
-    char out[64], why[64];
+    char out[64];
     struct dsc$descriptor_s dc, di, dout;
-    /* NOLOGNAM: the caller's process logicals are not copied. A user-mode
-     * SYS$OUTPUT (DEFINE/USER before VUPDATE, as the nightly job does) would
-     * otherwise send PRODUCT's output there instead of to our file (N25). */
-    unsigned int st, status = 0, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD | CLI$M_NOLOGNAM;
+    unsigned int st, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD | CLI$M_NOLOGNAM;
     char *text;
-    int rc;
+    *status = 0;
     snprintf(out, sizeof out, "SYS$SCRATCH:VUPDATE_%X.LIS", (unsigned int)getpid());
     dsc(&dc, cmd, strlen(cmd));
     dsc(&di, "NL:", 3);
     dsc(&dout, out, strlen(out));
-    /* NOCLISYM: a user's PRODUCT symbol must not run instead. */
-    st = lib$spawn(&dc, &di, &dout, &flags, 0, 0, &status, 0, 0, 0, 0, 0, 0);
+    st = lib$spawn(&dc, &di, &dout, &flags, 0, 0, status, 0, 0, 0, 0, 0, 0);
+    if (!(st & 1))
+        *status = st;
     text = slurp(out, 8L << 20);
     while (remove(out) == 0)
         ;
-    if (!(st & 1) || !(status & 1)) {
+    return text;
+}
+
+/* PRODUCT SHOW PRODUCT * /FULL into an inventory. */
+static unsigned int inventory(vu_inventory *inv)
+{
+    char why[64];
+    unsigned int status;
+    char *text = capture("PRODUCT SHOW PRODUCT * /FULL", &status);
+    int rc;
+    if (!(status & 1)) {
         free(text);
-        snprintf(why, sizeof why, "PRODUCT SHOW PRODUCT failed (%%X%08X)",
-                 (st & 1) ? status : st);
+        snprintf(why, sizeof why, "PRODUCT SHOW PRODUCT failed (%%X%08X)", status);
         return msg(VU__PCSI, 1, why, 0);
     }
     if (!text)
@@ -433,6 +445,27 @@ static unsigned int inventory(vu_inventory *inv)
     if (rc != 0)
         return msg(VU__PCSI, 1, rc == -2 ? "out of memory" : "no product table in the output", 0);
     return 0;
+}
+
+/* Patch recovery data on the system (PRODUCT SHOW RECOVERY_DATA): the number of
+ * sets, -1 when it can't be read. Installing a full kit deletes all of it (N26).
+ * VUPDATE$TEST_RECOVERY_FILE, for tests only, names a saved listing to use. */
+static int recovery_sets(char names[][48], int max, int *npatches)
+{
+    const char *test = getenv("VUPDATE$TEST_RECOVERY_FILE");
+    unsigned int status = 1;
+    char *text;
+    int n;
+    *npatches = 0;
+    text = test && *test ? slurp(test, 1L << 20) : capture("PRODUCT SHOW RECOVERY_DATA", &status);
+    if (!text)
+        return -1;
+    n = vu_pcsi_parse_recovery(text, names, max, npatches);
+    /* NORDSET (none) is a success status; anything else unreadable is "unknown". */
+    if (n == 0 && !strstr(text, "NORDSET") && !(status & 1))
+        n = -1;
+    free(text);
+    return n;
 }
 
 /* Fetch a reply through the cache: path is used when younger than max_age (and
@@ -1169,14 +1202,37 @@ static unsigned int fetch_job(ctx_t *c, job_t *j, const char *work)
 }
 
 /* PRODUCT INSTALL in a subprocess on this terminal. 0 or a message value. */
+/* Set when the user accepted losing patch recovery data (asked, or
+ * /DISCARD_RECOVERY_DATA); patched_this_run when this run installed a patch. */
+static int recovery_ok, patched_this_run;
+
+static int is_patch_kit(int type)
+{
+    return type == 4 || type == 7; /* patch, mandatory update */
+}
+
 static unsigned int install_kit(job_t *j, const char *kitfile)
 {
     char producer[32], base[16], product[64], cmd[600];
     struct dsc$descriptor_s dc;
     unsigned int st, status = 0, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD;
+    int ktype = vu_kitfile_type(kitfile);
     if (!vu_kitfile_parse(kitfile, producer, sizeof producer, base, sizeof base, product,
                           sizeof product))
         return msg(VU__KIT, 2, kitfile, "is not a producer-base-product-version kit name");
+    /* Second line of defence (D25): a full kit (any type but patch, or none
+     * given) is installed only when no recovery data would be lost, or the user
+     * accepted that. */
+    if (!is_patch_kit(ktype) && !recovery_ok) {
+        char names[1][48];
+        int np, sets = patched_this_run ? 1 : recovery_sets(names, 1, &np);
+        if (sets != 0)
+            return msg(VU__KIT, 2, product,
+                       sets < 0 ? "not installed: can't tell whether it would delete patch "
+                                  "recovery data (PRODUCT SHOW RECOVERY_DATA failed)"
+                                : "not installed: it would delete patch recovery data "
+                                  "(see /DISCARD_RECOVERY_DATA)");
+    }
     /* SIGNED_KIT: PCSI refuses a kit whose VSI signature doesn't validate (D18).
      * NOCONFIRM skips only PCSI's "these products?" question: the user has already
      * confirmed VUPDATE's list (or gave /NOCONFIRM). Kit questions are still asked. */
@@ -1194,6 +1250,8 @@ static unsigned int install_kit(job_t *j, const char *kitfile)
                  (st & 1) ? status : st);
         return msg(VU__KIT, 2, product, why);
     }
+    if (is_patch_kit(ktype))
+        patched_this_run = 1;
     return 0;
 }
 
@@ -1216,6 +1274,7 @@ static unsigned int do_upgrade(void)
     int download_only = present("DOWNLOAD_ONLY"), confirm = present("CONFIRM");
     int patches = present("PATCHES"), updates = present("UPDATES");
     int reboot_ok = present("REBOOT"); /* /NOREBOOT: skip kits that need a restart */
+    int discard = present("DISCARD_RECOVERY_DATA");
     const char *n_items[MAX_JOBS];
     const char *pre_names[MAX_JOBS][VU_MAXPREREQ];
     const char *const *pre_ptr[MAX_JOBS];
@@ -1351,6 +1410,23 @@ static unsigned int do_upgrade(void)
         goto out;
     }
 
+    /* Full kits before patches where prerequisites allow: installing a full kit
+     * deletes all patch recovery data, this run's patches' too (D25). Stable. */
+    {
+        job_t *tmp = (job_t *)malloc(njobs * sizeof *tmp);
+        size_t w = 0;
+        int pass2;
+        if (!tmp) {
+            st = msg(VU__FAILED, 1, "out of memory", 0);
+            goto out;
+        }
+        for (pass2 = 0; pass2 < 2; pass2++)
+            for (i = 0; i < njobs; i++)
+                if ((jobs[i].e->type == VU_T_PATCH) == pass2)
+                    tmp[w++] = jobs[i];
+        memcpy(jobs, tmp, njobs * sizeof *tmp);
+        free(tmp);
+    }
     /* Order: prerequisites first (installation_order is per kit; D17). */
     for (i = 0; i < njobs; i++) {
         int p;
@@ -1379,6 +1455,64 @@ static unsigned int do_upgrade(void)
     }
     mb(total, size, sizeof size);
     printf("Total %s, into %s\n", size, work);
+    /* Installing a full kit deletes ALL patch recovery data (PRODUCT UNDO PATCH),
+     * including that of patches installed earlier in this run (N26, D25). This
+     * is asked even with /NOCONFIRM; without a terminal it needs
+     * /DISCARD_RECOVERY_DATA. */
+    recovery_ok = patched_this_run = 0;
+    if (!download_only) {
+        size_t last_full = 0, before = 0;
+        int any_full = 0, sets = 0, np = 0, x;
+        char rnames[12][48];
+        for (i = 0; i < njobs; i++)
+            if (jobs[order[i]].e->type != VU_T_PATCH) {
+                any_full = 1;
+                last_full = i;
+            }
+        for (i = 0; any_full && i < last_full; i++)
+            if (jobs[order[i]].e->type == VU_T_PATCH)
+                before++;
+        if (any_full)
+            sets = recovery_sets(rnames, 12, &np);
+        if (any_full && (sets != 0 || before)) {
+            printf("\nWARNING: installing a full kit (");
+            for (i = 0, x = 0; i < njobs; i++)
+                if (jobs[order[i]].e->type != VU_T_PATCH)
+                    printf("%s%s", x++ ? ", " : "", jobs[order[i]].e->product);
+            printf(") deletes the saved recovery data\nof every patch: PRODUCT UNDO PATCH "
+                   "can then no longer take them out.\n");
+            if (sets < 0)
+                printf("  The recovery data on this system could not be read "
+                       "(PRODUCT SHOW RECOVERY_DATA).\n");
+            else if (sets > 0) {
+                printf("  Recovery data now held for %d patch%s:", np, np == 1 ? "" : "es");
+                for (x = 0; x < np && x < 12; x++)
+                    printf("%s %s", x ? "," : "", rnames[x]);
+                printf("%s\n", np > 12 ? ", ..." : "");
+            }
+            if (before)
+                printf("  This run also installs %lu patch%s before a full kit "
+                       "(prerequisites), whose recovery data is lost too.\n",
+                       (unsigned long)before, before == 1 ? "" : "es");
+            if (discard) {
+                printf("  /DISCARD_RECOVERY_DATA given: going ahead.\n");
+                recovery_ok = 1;
+            } else if (ask("Install the full kits anyway, losing that recovery data? [NO]: ", 1,
+                           line, sizeof line)) {
+                if (toupper((unsigned char)line[0]) != 'Y') {
+                    st = msg(VU__ABORTED, 1, "nothing installed (UPGRADE/PATCHES installs "
+                                             "patches only)", 0);
+                    goto out;
+                }
+                recovery_ok = 1;
+            } else {
+                st = msg(VU__RECOVERY, 0, 0, 0);
+                goto out;
+            }
+        } else if (any_full) {
+            recovery_ok = 1; /* nothing to lose: no recovery data, no patches before */
+        }
+    }
     if (!download_only && confirm) {
         if (!ask("Install these kits? [NO]: ", 1, line, sizeof line)) {
             st = msg(VU__NOTERM, 1, "UPGRADE without /NOCONFIRM or /DOWNLOAD_ONLY", 0);

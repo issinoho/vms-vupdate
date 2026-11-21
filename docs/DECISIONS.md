@@ -131,3 +131,12 @@ D24 (2026-11-21, phase 4). **Nightly check**: VUPDATE_NIGHTLY.COM START/STOP/NOW
 itself first, then runs CHECK as the submitting user (whose LOGIN it uses), and compares the findings
 (report minus its date lines) by checksum with the last run. On change: REQUEST to the operator and,
 with VUPDATE$NOTIFY_MAIL, mail. Never installs.
+
+D25 (user, 2026-11-21, after N26). **Guard patch recovery data.** Installing a full kit deletes all
+patch recovery data. UPGRADE puts full kits before patches where prerequisites allow; before
+installing, if it would install a full kit while recovery data exists (PRODUCT SHOW RECOVERY_DATA) or
+after a patch of the same run, it lists the patches affected and asks, even with /NOCONFIRM.
+Without a terminal it installs nothing then, unless /DISCARD_RECOVERY_DATA is given (VU__RECOVERY).
+install_kit checks again before each full kit. VUPDATE$TEST_RECOVERY_FILE (tests only) feeds a
+saved listing. Verified on AXPBOX: refusal in batch, the question (answered NO) on a terminal, and no
+question with no recovery data.

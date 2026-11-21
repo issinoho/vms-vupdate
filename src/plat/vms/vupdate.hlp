@@ -115,6 +115,13 @@
  prerequisites the portal doesn't always list). Kits that need a reboot
  don't stop the run: VUPDATE lists them at the end, for one reboot.
 
+ Installing a full kit (a product update, not a patch) makes PCSI delete
+ the saved recovery data of every patch, so PRODUCT UNDO PATCH can no
+ longer take them out. VUPDATE installs full kits before patches where it
+ can, says which patches would lose their recovery data, and asks, even
+ with /NOCONFIRM; without a terminal it installs no full kit unless
+ /DISCARD_RECOVERY_DATA is given.
+
  Installing needs the privileges PRODUCT INSTALL needs.
 
  Format
@@ -129,10 +136,18 @@
    /NOCONFIRM
 
  Asks before installing. /NOCONFIRM installs without asking (for batch
- jobs); PCSI may still ask kit-specific questions.
+ jobs); PCSI may still ask kit-specific questions, and VUPDATE still asks
+ before a full kit would delete patch recovery data.
 
 3 /NOCONFIRM
- Installs without asking first. See /CONFIRM.
+ Installs without asking first. See /CONFIRM. It does not skip the
+ question about patch recovery data: see /DISCARD_RECOVERY_DATA.
+
+3 /DISCARD_RECOVERY_DATA
+ Accepts that installing a full kit deletes the saved patch recovery data
+ (PRODUCT UNDO PATCH). Without it VUPDATE asks first, even with
+ /NOCONFIRM, and in a batch job installs no full kit while recovery data
+ exists.
 
 3 /DOWNLOAD_ONLY
  Downloads, checks and unpacks the kits but doesn't install them. Each kit

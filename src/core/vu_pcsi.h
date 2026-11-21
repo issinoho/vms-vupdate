@@ -39,6 +39,16 @@ const vu_product *vu_inventory_find(const vu_inventory *inv, const char *name);
 /* Parse "PRODUCER BASE NAME VERSION" into a product. Returns 1 on success. */
 int vu_pcsi_parse_spec(const char *spec, size_t len, vu_product *out);
 
+/* PRODUCT SHOW RECOVERY_DATA (or the same table PRODUCT INSTALL prints): the
+ * number of recovery data sets, and the patch names in them (first max into
+ * names). 0 when there are none (%PCSIUI-I-NORDSET). */
+int vu_pcsi_parse_recovery(const char *text, char names[][48], int max, int *npatches);
+
+/* The PCSI kit type digit in a kit file name ("...-V0500--4.PCSI$COMPRESSED" -> 4):
+ * 1 full, 2 operating system, 3 partial, 4 patch, 5 platform, 6 transition,
+ * 7 mandatory update; 0 when not there. */
+int vu_kitfile_type(const char *filename);
+
 /* Kit files in a downloaded ZIP. */
 #define VU_KF_NONE 0
 #define VU_KF_PCSI 1       /* .PCSI */

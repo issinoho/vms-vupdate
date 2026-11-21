@@ -312,3 +312,55 @@ int vu_kitfile_parse(const char *f, char *producer, size_t prodsz, char *base, s
         return 0;
     return 1;
 }
+
+int vu_pcsi_parse_recovery(const char *text, char names[][48], int max, int *npatches)
+{
+    const char *l = text;
+    int sets = 0, n = 0;
+    while (*l) {
+        const char *e = strchr(l, '\n'), *p = l;
+        size_t len = e ? (size_t)(e - l) : strlen(l);
+        char tok[3][48];
+        int t = 0;
+        while (p < l + len && *p == ' ')
+            p++;
+        if ((size_t)(l + len - p) >= 17 && strncmp(p, "RECOVERY DATA SET", 17) == 0) {
+            sets++;
+        } else {
+            /* A table row: "VSI AXPVMS VMS842L2A_RMSDEF V1.0   VSI AXPVMS VMS V8.4-2L2". */
+            while (t < 3 && p < l + len) {
+                size_t k = 0;
+                while (p < l + len && *p != ' ' && k < sizeof tok[0] - 1)
+                    tok[t][k++] = *p++;
+                tok[t][k] = '\0';
+                while (p < l + len && *p == ' ')
+                    p++;
+                if (k)
+                    t++;
+            }
+            if (sets && t == 3 && strlen(tok[1]) > 3
+                && strcmp(tok[1] + strlen(tok[1]) - 3, "VMS") == 0) {
+                if (n < max)
+                    strcpy(names[n], tok[2]);
+                n++;
+            }
+        }
+        if (!e)
+            break;
+        l = e + 1;
+    }
+    if (npatches)
+        *npatches = n;
+    return sets;
+}
+
+int vu_kitfile_type(const char *f)
+{
+    size_t n = name_len(f);
+    const char *dot = memchr(f, '.', n);
+    if (dot)
+        n = (size_t)(dot - f);
+    if (n >= 2 && f[n - 2] == '-' && f[n - 1] >= '1' && f[n - 1] <= '7')
+        return f[n - 1] - '0';
+    return 0;
+}

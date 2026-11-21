@@ -488,6 +488,27 @@ static void test_notes(void)
     free(t);
 }
 
+static void test_recovery(void)
+{
+    char names[4][48];
+    int np = 0;
+    char *t = need("tests/data/recovery_axp.txt"), *u = need("tests/data/recovery_none.txt");
+    if (t) {
+        CHECK(vu_pcsi_parse_recovery(t, names, 4, &np) == 2);
+        CHECK(np == 2);
+        CHECK_STR(names[0], "VMS842L2A_RMSDEF");
+        CHECK_STR(names[1], "VMS842L2A_MISC");
+        CHECK(vu_pcsi_parse_recovery(t, names, 1, &np) == 2 && np == 2);
+    }
+    if (u)
+        CHECK(vu_pcsi_parse_recovery(u, names, 4, &np) == 0 && np == 0);
+    CHECK(vu_kitfile_type("VSI-AXPVMS-VMS842L2A_SYS-V0500--4.PCSI$COMPRESSED") == 4);
+    CHECK(vu_kitfile_type("VSI-AXPVMS-OPENSSH-V0909-2C-1.PCSI$COMPRESSED;1") == 1);
+    CHECK(vu_kitfile_type("NOTYPE.PCSI") == 0);
+    free(t);
+    free(u);
+}
+
 static void test_report(void)
 {
     vu_product p;
@@ -559,6 +580,7 @@ int main(void)
     test_report();
     test_kitfiles();
     test_notes();
+    test_recovery();
     test_real();
     printf("%d checks, %d failed\n", checks, fails);
     return fails ? EXIT_FAILURE : EXIT_SUCCESS;
