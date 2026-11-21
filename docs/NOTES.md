@@ -126,3 +126,8 @@ RMSDEF failed in pass 1 (FILESYS/UTILITY not yet in), and installed in the retry
 CHECK lists no patches: all 38 L2 patches plus VMS842L2A_PCSI V1.0 went in on 2026-11-21 (39 items in
 PRODUCT SHOW HISTORY). Several kits retained newer files already on the system (PCSI-I-RETAIN). The node
 needs the reboot the kits ask for.
+
+N25. LIB$SPAWN copies the caller's process logical names, user-mode ones included: with
+`DEFINE/USER SYS$OUTPUT x` before VUPDATE, the spawned PRODUCT SHOW PRODUCT wrote into x, not into the
+spawn's output file, and CHECK failed with VUPDATE-E-PCSI (found by the nightly job, AXPBOX 2026-11-21).
+The inventory spawn now uses CLI$M_NOLOGNAM.

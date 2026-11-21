@@ -1,0 +1,94 @@
+VUPDATE @VERSION@ for OpenVMS (vms-vupdate, @ARCH@) - EARLY TEST RELEASE
+=========================================================================
+
+VUPDATE keeps an OpenVMS system's VSI software up to date, like a package
+manager: it compares the installed products (PRODUCT SHOW PRODUCT) with the
+VSI Service Platform catalogue (sp.vmssoftware.com), lists newer kits, OpenVMS
+patches and security fixes, and downloads and installs the ones you choose.
+It needs a VSI portal account. It is not a VSI product.
+
+    $ VUPDATE LOGIN                  ! once per node: your portal e-mail and password
+    $ VUPDATE CHECK                  ! what is new; /SECURITY, /ALL, /OUTPUT=file
+    $ VUPDATE SHOW OPENSSH           ! a kit's details: files, prerequisites, notes
+    $ VUPDATE UPGRADE OPENSSH        ! download, check and install it
+    $ VUPDATE UPGRADE/PATCHES/NOREBOOT   ! every patch that needs no reboot
+    $ VUPDATE HELP                   ! all commands and qualifiers
+
+Setting it up
+-------------
+    $ @SYS$STARTUP:VUPDATE$STARTUP.COM       ! at boot (SYSTARTUP_VMS.COM)
+    $ @VUPDATE$ROOT:[COM]VUPDATE$SETUP.COM   ! in a system manager's LOGIN.COM
+    $ VUPDATE LOGIN
+
+VUPDATE is for system managers: installing needs the privileges of PRODUCT
+INSTALL, and the saved credentials belong to the account that ran LOGIN.
+
+What UPGRADE does
+-----------------
+For each kit chosen it adds the kits it needs first that are not installed:
+those the portal lists, and those named under "KIT DEPENDENCIES" in the kit's
+release notes (the portal's lists are incomplete). Kits made for another
+OpenVMS version are left out. It shows the list in install order and asks once.
+Then for each kit it downloads the files, checks each one's MD5 against the
+portal's, unpacks the ZIP (or self-extracting .ZIPEXE) itself, and runs
+
+    PRODUCT INSTALL kit /SOURCE=dir /SAVE_RECOVERY_DATA /OPTIONS=(SIGNED_KIT,NOCONFIRM)
+
+on your terminal: PCSI checks VSI's signature and refuses a kit that fails;
+VSI's own kit procedure asks its questions and checks its prerequisites.
+Patches can be taken out again with PRODUCT UNDO PATCH. A kit that fails is
+kept in VUPDATE$ROOT:[KITS] and the others go on; failed kits get a second try
+at the end (VSI kits check prerequisites the portal doesn't list). Kits that
+need a reboot don't stop the run: they are listed at the end, for one reboot.
+VUPDATE never installs an OpenVMS upgrade; it reports one.
+
+Nightly check
+-------------
+    $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY START [hh:mm]   ! default 02:00
+    $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY STOP
+    $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY NOW             ! one check now
+
+A batch job (SYS$BATCH, or the queue in VUPDATE$NIGHTLY_QUEUE) under your
+account runs VUPDATE CHECK every night and queues itself for the next. When the
+findings change it sends an operator message (REQUEST) and, if the logical
+VUPDATE$NOTIFY_MAIL is an address, mails the report. It never installs.
+
+The saved credentials
+---------------------
+VUPDATE LOGIN tests the e-mail and password with VSI's sign-in service and
+saves them in VUPDATE$ROOT:[DATA]CREDENTIALS.DAT, readable by its owner only.
+The contents are sealed (AES-256-GCM) with a key derived from this node's
+identity, so the file is useless on another node and a modified file is
+refused. This is NOT secrecy from privileged users: anyone who can read the
+file on this node can recover the password. VUPDATE LOGOUT deletes it, as
+does PRODUCT REMOVE VUPDATE. A changed SCSNODE means VUPDATE LOGIN again.
+
+Logical names
+-------------
+    VUPDATE$ROOT          the installation ([SYSEXE] [COM] [HELP] [DATA] [CACHE] [KITS])
+    VUPDATE$PROXY         a proxy URL for all VUPDATE connections
+    VUPDATE$CA_FILE       another CA bundle than [DATA]CACERT.PEM
+    VUPDATE$CREDENTIALS   another credential file
+    VUPDATE$NIGHTLY_TIME, VUPDATE$NIGHTLY_QUEUE, VUPDATE$NOTIFY_MAIL  (nightly check)
+
+Requires
+--------
+OpenVMS x86-64 (V9.2 or later) or Alpha (V8.4-2L2), VSI SSL3 (OpenSSL 3), a VSI
+Service Platform account, and HTTPS access to sp.vmssoftware.com,
+kc.teracloud.com and the portal's download store (nyc3.digitaloceanspaces.com).
+
+Limits
+------
+The portal's interface is VSI's and not documented: if it changes, VUPDATE
+says "unexpected reply" rather than guessing. The portal's "restart required"
+flag is not always right (kits say so themselves when they install). Release
+notes that come only as PDF can't be read for dependencies. Portal accounts
+with multi-factor sign-in are not supported.
+
+Licences
+--------
+VUPDATE: MIT (LICENSE). It contains libcurl (curl licence), zlib, zstd (BSD) and
+cJSON (MIT). [DATA]CACERT.PEM is the Mozilla CA bundle as published by the curl
+project, under the Mozilla Public Licence 2.0.
+
+https://github.com/issinoho/vms-vupdate

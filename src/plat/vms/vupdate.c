@@ -16,6 +16,7 @@
 #include "vu_report.h"
 #include "vu_store.h"
 #include "vu_ver.h"
+#include "vu_version.h"
 
 #include <climsgdef.h>
 #include <clidef.h>
@@ -404,7 +405,10 @@ static unsigned int inventory(vu_inventory *inv)
     static const char cmd[] = "PRODUCT SHOW PRODUCT * /FULL";
     char out[64], why[64];
     struct dsc$descriptor_s dc, di, dout;
-    unsigned int st, status = 0, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD;
+    /* NOLOGNAM: the caller's process logicals are not copied. A user-mode
+     * SYS$OUTPUT (DEFINE/USER before VUPDATE, as the nightly job does) would
+     * otherwise send PRODUCT's output there instead of to our file (N25). */
+    unsigned int st, status = 0, flags = CLI$M_NOCLISYM | CLI$M_NOKEYPAD | CLI$M_NOLOGNAM;
     char *text;
     int rc;
     snprintf(out, sizeof out, "SYS$SCRATCH:VUPDATE_%X.LIS", (unsigned int)getpid());
@@ -1509,7 +1513,7 @@ int main(void)
 {
     char action[32];
     if (!value("ACTION", action, sizeof action))
-        return (int)msg(VU__FAILED, 1, "no action given (LOGIN, LOGOUT, CHECK, SHOW, UPGRADE, HELP)", 0);
+        return (int)msg(VU__FAILED, 1, "no action given (LOGIN, LOGOUT, CHECK, SHOW, UPGRADE, HELP, VERSION)", 0);
     if (strncmp(action, "LOGI", 4) == 0)
         return (int)do_login();
     if (strncmp(action, "LOGO", 4) == 0)
@@ -1522,5 +1526,9 @@ int main(void)
         return (int)do_upgrade();
     if (strncmp(action, "HELP", 4) == 0)
         return (int)do_help();
+    if (strncmp(action, "VERS", 4) == 0) {
+        printf("vupdate %s\n", VU_VERSION);
+        return SS$_NORMAL;
+    }
     return (int)msg(VU__FAILED, 1, "unknown action", 0);
 }

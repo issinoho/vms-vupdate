@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VU_USER_AGENT "VUPDATE/0.1 (OpenVMS)"
+#include "vu_version.h"
+#define VU_USER_AGENT "VUPDATE/" VU_VERSION " (OpenVMS)"
 
 static CURL *h;
 static char ca[512], px[512];

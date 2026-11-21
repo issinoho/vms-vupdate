@@ -68,7 +68,9 @@ Like SSHLOGS in vms-dcl-tools.
 3. **Done 2026-11-21** (N22-N24): all 38 L2 patches on AXPBOX installed through VUPDATE in three runs.
    Patch path: prereq ordering + security flag, tested on the Alpha (V8.4-2L2 has SYS-V0500 etc.). The x86 node
    (E9.2-4) has no patches yet.
-4. Nightly batch, x86 + Alpha kits, release per the vms-* family process.
+4. Nightly batch, x86 + Alpha kits, release per the vms-* family process. **In progress 2026-11-21**:
+   nightly verified in the dev tree on AXPBOX (D24, N25); kits built on both (D23). Waiting: kit
+   install test (system-wide, user's go-ahead), GitHub repo and release, family site.
 Not planned: IA64.
 
 ## Open questions / risks
@@ -78,5 +80,5 @@ Not planned: IA64.
 - Whether the portal's terms allow third-party clients: worth asking VSI (ambassador channel).
 - Kits with several PCSI files or VMSINSTAL kits: report and skip (VSP has the same limit).
 - Products whose portal name differs from the PCSI name: keep a small alias table in the kit.
-- libcurl: vms-curl ships no library in its kit, so the build uses its build tree (D3). For
-  releases, add CURLLIB.OLB + headers to the VMSCURL kit, or a VMSCURL_DEV kit (needs a vms-curl release).
+- libcurl: linked statically from vms-curl's build tree (D3); the kit needs nothing of it at run
+  time (D23). Building VUPDATE elsewhere needs that tree; a VMSCURL_DEV kit would make it easier.

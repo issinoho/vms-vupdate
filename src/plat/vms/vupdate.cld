@@ -7,6 +7,7 @@
 !                   [/NOREBOOT] [/NOCONFIRM] [/FIELD_TEST] [/DOWNLOAD_ONLY]
 !                   [/WORK=directory] [/REFRESH]
 !   VUPDATE HELP [topic...]
+!   VUPDATE VERSION
 
 define type ACTIONS
     keyword LOGIN,   syntax=VU_LOGIN
@@ -15,6 +16,7 @@ define type ACTIONS
     keyword SHOW,    syntax=VU_SHOW
     keyword UPGRADE, syntax=VU_UPGRADE
     keyword HELP,    syntax=VU_HELP
+    keyword VERSION, syntax=VU_VERSION
 
 define verb VUPDATE
     image VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE
@@ -60,3 +62,6 @@ define syntax VU_UPGRADE
 define syntax VU_HELP
     parameter P1, label=ACTION, value(required, type=ACTIONS)
     parameter P2, label=TOPIC, value(type=$REST_OF_LINE)
+
+define syntax VU_VERSION
+    parameter P1, label=ACTION, value(required, type=ACTIONS)

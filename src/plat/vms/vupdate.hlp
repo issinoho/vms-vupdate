@@ -8,7 +8,7 @@
 
    VUPDATE action [parameters] [/qualifiers]
 
- The actions are LOGIN, LOGOUT, CHECK, SHOW, UPGRADE and HELP. A VSI
+ The actions are LOGIN, LOGOUT, CHECK, SHOW, UPGRADE, HELP and VERSION. A VSI
  portal account is needed (VUPDATE LOGIN once per node).
 
  VUPDATE never installs an OpenVMS upgrade: it reports one. Kits must pass
@@ -177,6 +177,13 @@
  Format
 
    VUPDATE HELP [topic...]
+
+2 VERSION
+ Shows the VUPDATE version.
+
+ Format
+
+   VUPDATE VERSION
 
 2 Logical_names
  VUPDATE$ROOT          the installation root ([SYSEXE], [DATA], [CACHE],

@@ -1,0 +1,37 @@
+--
+-- PCSI product description for VUPDATE (vms-vupdate) on OpenVMS.
+-- Template: tools/kit.sh substitutes @PRODUCER@, @BASE@ and @PCSIVERSION@.
+--
+product @PRODUCER@ @BASE@ VUPDATE @PCSIVERSION@ full ;
+
+    -- VUPDATE.EXE links libcurl, zlib and zstd statically; OpenSSL is VSI's SSL3.
+    software VSI @BASE@ SSL3 ;
+
+    information RELEASE_NOTES phase after ;
+
+    directory [VUPDATE] ;
+    directory [VUPDATE.SYSEXE] ;
+    directory [VUPDATE.COM] ;
+    directory [VUPDATE.HELP] ;
+    directory [VUPDATE.DATA] ;
+    directory [VUPDATE.CACHE] ;
+    directory [VUPDATE.KITS] ;
+
+    file [VUPDATE.SYSEXE]VUPDATE.EXE ;
+    file [VUPDATE.COM]VUPDATE.CLD ;
+    file [VUPDATE.COM]VUPDATE$SETUP.COM ;
+    file [VUPDATE.COM]VUPDATE_NIGHTLY.COM ;
+    file [VUPDATE.HELP]VUPDATE.HLB ;
+    file [VUPDATE.DATA]CACERT.PEM ;
+    file [VUPDATE]README.VMS ;
+    file [VUPDATE]LICENSE. ;
+    file [SYS$STARTUP]VUPDATE$STARTUP.COM ;
+
+    -- Define VUPDATE$ROOT now and protect [DATA]. VUPDATE changes no login or startup
+    -- procedure, DCL table or help library: those are post-installation tasks.
+    execute postinstall "@PCSI$DESTINATION:[SYS$STARTUP]VUPDATE$STARTUP.COM INSTALL" interactive ;
+    execute install "CONTINUE" remove "@PCSI$DESTINATION:[SYS$STARTUP]VUPDATE$STARTUP.COM REMOVE" ;
+
+    information POST_INSTALL phase after ;
+
+end product ;

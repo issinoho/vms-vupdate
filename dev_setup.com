@@ -24,6 +24,12 @@ $ if f$parse("VUPDATE$ROOT:[DATA]") .eqs. "" then -
      create/directory/protection=(S:RWE,O:RWE,G,W) VUPDATE$ROOT:[DATA]
 $ if f$parse("VUPDATE$ROOT:[CACHE]") .eqs. "" then create/directory VUPDATE$ROOT:[CACHE]
 $ if f$parse("VUPDATE$ROOT:[HELP]") .eqs. "" then create/directory VUPDATE$ROOT:[HELP]
+$ if f$parse("VUPDATE$ROOT:[COM]") .eqs. "" then create/directory VUPDATE$ROOT:[COM]
+$ copy/nolog 'cld' VUPDATE$ROOT:[COM]VUPDATE.CLD
+$ kitdir = here - "]" + ".KIT]"
+$ if f$search(kitdir + "VUPDATE_NIGHTLY.COM") .nes. "" then -
+     copy/nolog 'kitdir'VUPDATE_NIGHTLY.COM VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY.COM
+$ purge/nolog VUPDATE$ROOT:[COM]
 $ copy/nolog 'bld'VUPDATE.HLB VUPDATE$ROOT:[HELP]VUPDATE.HLB
 $ purge/nolog VUPDATE$ROOT:[HELP]VUPDATE.HLB
 $ copy/nolog 'bld'VUPDATE.EXE VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE

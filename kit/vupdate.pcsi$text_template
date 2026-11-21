@@ -1,0 +1,21 @@
+=product @PRODUCER@ @BASE@ VUPDATE @PCSIVERSION@ full
+1 'PRODUCER
+=prompt @PRODUCER@
+1 'PRODUCT
+=prompt VUPDATE @VERSION@ for OpenVMS (vms-vupdate): updates and patches from the VSI Service Platform, early test
+1 'NOTICE
+=prompt VUPDATE is distributed under the MIT licence; its CA bundle under the MPL 2.0. Early test release.
+1 RELEASE_NOTES
+=prompt Documentation is in [VUPDATE]README.VMS under the installation directory, and VUPDATE HELP.
+1 POST_INSTALL
+=prompt Post-installation tasks for VUPDATE (vms-vupdate)
+    At boot, add to SYS$MANAGER:SYSTARTUP_VMS.COM:
+    $ @SYS$STARTUP:VUPDATE$STARTUP.COM
+    For system managers, in their LOGIN.COM:
+    $ @VUPDATE$ROOT:[COM]VUPDATE$SETUP.COM
+    Then once per node: VUPDATE LOGIN. Optionally the nightly check:
+    $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY START
+
+PRODUCT REMOVE VUPDATE deletes the saved portal credentials, the cache and any
+kept kits, stops the nightly check of the user removing it, and deassigns
+VUPDATE$ROOT.

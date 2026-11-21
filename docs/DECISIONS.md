@@ -117,3 +117,17 @@ that needs a reboot (VSI's kit dialogue: several ECO kits may be installed befor
 them at the end with VU__REBOOT. Install failures are retried once after all other kits, because VSI
 kits enforce prerequisites the portal and notes don't list (N23) and PCSI rolls a failure back.
 Replaces the stop-after-reboot rule of D18.
+
+D23 (2026-11-21, phase 4). **Kit**: ISSINOHO <arch>VMS VUPDATE, 0.1.0 = T0.1-0 (vu_version.h; MAKE_KIT
+checks VUPDATE VERSION). Installs [VUPDATE.SYSEXE] image, [COM] CLD, setup and nightly procedures,
+[HELP] help library, [DATA] CA bundle (curl.se's Mozilla bundle, MPL 2.0), [CACHE], [KITS], and
+SYS$STARTUP:VUPDATE$STARTUP.COM, which defines VUPDATE$ROOT and makes [DATA], [CACHE] and [KITS]
+owner-only. Depends on VSI SSL3; libcurl, zlib and zstd are static, so vms-curl needs no release for
+it (D3's open item closed). The kit changes no DCLTABLES, HELPLIB, SYSTARTUP or SYLOGIN: the verb is
+per process (VUPDATE$SETUP.COM in a system manager's LOGIN.COM), as in the other vms-* kits.
+PRODUCT REMOVE deletes the saved credentials, cache and kept kits and stops the remover's nightly job.
+
+D24 (2026-11-21, phase 4). **Nightly check**: VUPDATE_NIGHTLY.COM START/STOP/NOW; the job requeues
+itself first, then runs CHECK as the submitting user (whose LOGIN it uses), and compares the findings
+(report minus its date lines) by checksum with the last run. On change: REQUEST to the operator and,
+with VUPDATE$NOTIFY_MAIL, mail. Never installs.
