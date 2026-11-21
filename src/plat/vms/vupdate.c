@@ -415,8 +415,12 @@ static int cached(vu_session *s, const char *path, long max_age, int refresh, fe
     if (!s->user[0] && (cred_status = load_session(s)) != 0)
         return VU_E_CRED;
     rc = fn(s, arg, json);
-    if (rc == VU_OK && write_file(path, *json) != 0)
-        remove(path); /* never leave a partial cache file */
+    if (rc == VU_OK) {
+        if (write_file(path, *json) != 0)
+            remove(path); /* never leave a partial cache file */
+        else
+            purge(path);
+    }
     return rc;
 }
 
@@ -568,12 +572,15 @@ static unsigned int do_check(void)
     if (only_sec)
         fprintf(out, "Showing security fixes only (/SECURITY).\n");
     {
-        int k;
-        for (k = VU_F_OSUPGRADE; k <= VU_F_NOTINCAT; k++) {
+        /* Report order (vu_plan's sort order), not the enum's. */
+        static const vu_find_t order[] = {VU_F_OSUPGRADE, VU_F_PATCH, VU_F_UPDATE,
+                                          VU_F_CURRENT, VU_F_NOTINCAT};
+        size_t k;
+        for (k = 0; k < sizeof order / sizeof order[0]; k++) {
             int head = 0;
             for (i = 0; i < pl.n; i++) {
                 const vu_finding *f = &pl.f[i];
-                if ((int)f->kind != k)
+                if (f->kind != order[k])
                     continue;
                 if (!vu_finding_actionable(f->kind) && !show_all)
                     continue;

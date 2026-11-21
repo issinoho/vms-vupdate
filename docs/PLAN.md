@@ -61,8 +61,7 @@ Like SSHLOGS in vms-dcl-tools.
    + unit tests (Linux, x86, Alpha), libcurl link probe on both (vms-curl CURLLIB.OLB + SSL3:
    libcurl 8.22.0, OpenSSL 3.0.22, both portal hosts reached).
 1. LOGIN/LOGOUT/CHECK on the x86 node, then the Alpha. Check the output against tests/unit/vucheck on
-   saved replies. **In progress 2026-11-21**: image builds on both (IMAGE-OK); credential-free paths
-   and a refused sign-in verified on both; real LOGIN + CHECK wait for the user's password.
+   saved replies. **Done 2026-11-21** (N17), awaiting exit review.
 2. SHOW + UPGRADE with /DOWNLOAD_ONLY, then a real install of a low-risk kit (ask first; LUA
    turned out to be current, see D5) with SAVE_RECOVERY_DATA.
 3. Patch path: prereq ordering + security flag, tested on the Alpha (V8.4-2L2 has SYS-V0500 etc.). The x86 node

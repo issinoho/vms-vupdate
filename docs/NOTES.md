@@ -70,3 +70,10 @@ spec (VUPDATE$ROOT:[DATA]CACERT.PEM) on both.
 
 N16. Spawned `PRODUCT SHOW PRODUCT * /FULL` (LIB$SPAWN, output to a SYS$SCRATCH file) works in
 CHECK, and a 120-block single-line JSON cache file (Stream_LF) reads back with fread on x86.
+
+N17. Phase 1 on the real account, 2026-11-21 (user typed LOGIN on both nodes). X86VMS E9.2-4: 9 updates
+(APACHEWS COBOL CXX LIBPQ PYTHON PYTHWHLS SQLRELAY VMSSPI X86ASM), no patches; 20 details fetched; output
+identical to build/vucheck on the same PRODUCT listing and catalogue. AXPBOX V8.4-2L2: 38 VMS842L2A
+patches (14 flagged reboot, DCL V4.0 flagged security) + CURL, KERBEROS, OPENSSH updates. Repeat CHECK
+answered from the cache without signing in. /SECURITY lists DCL V4.0 only. The x86 store copied to the
+Alpha is refused (VU__STORE). Store file protection (S:RWD,O:RWD,G,W). PRODUCT SHOW PRODUCT has no /OUTPUT.

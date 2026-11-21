@@ -37,6 +37,8 @@ void vu_report_line(const vu_finding *f, int flags, char *buf, size_t sz)
         strcat(tail, ", security");
     if (flags & VU_FL_REBOOT)
         strcat(tail, ", reboot");
-    snprintf(buf, sz, "  %-20s %-16s -> %-16s%s%s", name, have, f->entry->ver,
-             tail[0] ? " " : "", tail[0] ? tail + 2 : "");
+    if (tail[0])
+        snprintf(buf, sz, "  %-20s %-18s -> %-18s %s", name, have, f->entry->ver, tail + 2);
+    else
+        snprintf(buf, sz, "  %-20s %-18s -> %s", name, have, f->entry->ver);
 }
