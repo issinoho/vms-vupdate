@@ -1,0 +1,53 @@
+[
+ {
+  "additional_restrictions": [
+   {
+    "ecokits": 1,
+    "r_to_minor_rel": 0
+   }
+  ],
+  "archived_version": "None",
+  "contracts": [],
+  "description": "Synthetic update kit. Prerequisite: PCSI V1 patch.",
+  "downloaded": "1",
+  "eco_rating": "1",
+  "files": [
+   {
+    "download_size": 52252372,
+    "filename": "VMS923X_UPDATE-V0300.ZIP",
+    "md5": "1417e86586351ccc536b03abc7a29a37",
+    "package_file_number": 2208,
+    "save_as": "VMS923X_UPDATE-V0300.ZIP",
+    "uploaded_datetime": "Wed, 31 Dec 2025 23:00:34 GMT"
+   }
+  ],
+  "minos": [
+   "V9.2-3"
+  ],
+  "name": "VMS923X_UPDATE-V0300",
+  "package_number": "1662",
+  "prereq": [
+   {
+    "has_access": 1,
+    "installation_order": 1,
+    "minos": "V9.2-3",
+    "name": "VMS923X_PCSI-V0100",
+    "package_number": 1502,
+    "type": "E",
+    "version": "V1.0-0"
+   }
+  ],
+  "product_name": "OpenVMS",
+  "release_date": "2026-01-28",
+  "required_for": [],
+  "restart_required": "1",
+  "style": "C",
+  "sysarch": [
+   "X86"
+  ],
+  "type": "E",
+  "verified": "1",
+  "verified_datetime": "2026-01-28 23:17:26",
+  "version": "V3.0-0"
+ }
+]

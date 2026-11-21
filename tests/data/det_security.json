@@ -1,0 +1,63 @@
+[
+ {
+  "additional_restrictions": [
+   {
+    "ecokits": 1,
+    "r_to_minor_rel": 0
+   }
+  ],
+  "archived_version": "None",
+  "contracts": [],
+  "description": "Synthetic kit that fixes CVE-2099-0001, a buffer overflow.",
+  "downloaded": "1",
+  "eco_rating": "1",
+  "files": [
+   {
+    "download_size": 963089,
+    "filename": "VMS923X_DCL-V0400.ZIP",
+    "md5": "01fbbc22933e485fb825ea3047752fc4",
+    "package_file_number": 2250,
+    "save_as": "VMS923X_DCL-V0400.ZIP",
+    "uploaded_datetime": "Tue, 03 Mar 2026 22:21:13 GMT"
+   }
+  ],
+  "minos": [
+   "V9.2-2",
+   "V9.2-3"
+  ],
+  "name": "VMS923X_DCL-V0400",
+  "package_number": "1694",
+  "prereq": [
+   {
+    "has_access": 1,
+    "installation_order": 1,
+    "minos": "V9.2-2",
+    "name": "VMS922X_UPDATE-V0200",
+    "package_number": 1182,
+    "type": "E",
+    "version": "V2.0-0"
+   },
+   {
+    "has_access": 1,
+    "installation_order": 2,
+    "minos": "V9.2-3",
+    "name": "VMS923X_PCSI-V0100",
+    "package_number": 1502,
+    "type": "E",
+    "version": "V1.0-0"
+   }
+  ],
+  "product_name": "OpenVMS",
+  "release_date": "2026-03-04",
+  "required_for": [],
+  "restart_required": "0",
+  "style": "C",
+  "sysarch": [
+   "X86"
+  ],
+  "type": "E",
+  "verified": "1",
+  "verified_datetime": "2026-05-11 21:24:49",
+  "version": "V4.0-0"
+ }
+]

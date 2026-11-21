@@ -1,0 +1,48 @@
+! vupdate.cld - DCL verb VUPDATE (draft, phase 0: syntax only, no image yet).
+!   VUPDATE LOGIN
+!   VUPDATE LOGOUT
+!   VUPDATE CHECK [/SECURITY] [/FIELD_TEST] [/ALL] [/REFRESH] [/OUTPUT=file]
+!   VUPDATE SHOW product
+!   VUPDATE UPGRADE [product[,...]] [/ALL] [/SECURITY] [/NOCONFIRM] [/FIELD_TEST]
+!                   [/DOWNLOAD_ONLY] [/WORK=directory]
+
+define type ACTIONS
+    keyword LOGIN,   syntax=VU_LOGIN
+    keyword LOGOUT,  syntax=VU_LOGOUT
+    keyword CHECK,   syntax=VU_CHECK
+    keyword SHOW,    syntax=VU_SHOW
+    keyword UPGRADE, syntax=VU_UPGRADE
+
+define verb VUPDATE
+    image VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE
+    parameter P1, label=ACTION, prompt="Action", value(required, type=ACTIONS)
+
+define syntax VU_LOGIN
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+
+define syntax VU_LOGOUT
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+
+define syntax VU_CHECK
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+    qualifier SECURITY
+    qualifier FIELD_TEST
+    qualifier ALL
+    qualifier REFRESH
+    qualifier OUTPUT, value(required, type=$FILE)
+
+define syntax VU_SHOW
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+    parameter P2, label=PRODUCT, prompt="Product", value(required)
+
+define syntax VU_UPGRADE
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+    parameter P2, label=PRODUCT, prompt="Product", value(list)
+    qualifier ALL
+    qualifier SECURITY
+    qualifier CONFIRM, default
+    qualifier FIELD_TEST
+    qualifier DOWNLOAD_ONLY
+    qualifier WORK, value(required, type=$FILE)
+    disallow not (PRODUCT or ALL or SECURITY)
+    disallow PRODUCT and ALL

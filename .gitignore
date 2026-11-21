@@ -1,0 +1,7 @@
+build/
+out/
+*.o
+tools/nodes.conf
+tools/__pycache__/
+tests/data/real/
+tools/env-*.com

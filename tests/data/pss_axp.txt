@@ -1,0 +1,53 @@
+
+
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+PRODUCT                              KIT TYPE    STATE     MAINTENANCE                          REFERENCED BY
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+DEC AXPVMS JAVA150 V1.5-9            Full LP     Installed
+ISSINOHO AXPVMS BESZEL V0.21-1E2     Full LP     Installed
+ISSINOHO AXPVMS HASS V0.1-2          Full LP     Installed
+ISSINOHO AXPVMS LIGHTTPD V1.4-85E5   Full LP     Installed
+ISSINOHO AXPVMS PAKGEN V1.4-0        Full LP     Installed
+ISSINOHO AXPVMS STEWARD T0.16-1      Full LP     Installed
+ISSINOHO AXPVMS VMSNOTIFY V0.1-0     Full LP     Installed
+ISSINOHO AXPVMS VMSOTEL V0.1-0       Full LP     Installed
+ISSINOHO AXPVMS VTOP T0.1-1          Full LP     Installed
+SCI VMS DFU V3.5-100                 Full LP     Installed
+VSI AXPVMS AVAIL_MAN_BASE V8.4-2L2   Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS CDSA V2.4-320A            Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS CURL V8.0-1A              Full LP     Installed
+VSI AXPVMS DECNET_PHASE_IV V8.4-2L2  Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS DECSET V13.0-3            Full LP     Installed
+VSI AXPVMS DWMOTIF V1.7-F            Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS DWMOTIF_SUPPORT V8.4-2L2  Full LP     Installed                                      VSI AXPVMS VMS V8.4-2L2
+VSI AXPVMS ENVMGR V1.9-6             Full LP     Installed                                      VSI AXPVMS MMS V4.0-5
+VSI AXPVMS HPBINARYCHECKER V1.1-A    Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS KERBEROS V3.1-152B        Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS LDAP V2.6-6               Full LP     Installed
+VSI AXPVMS MMS V4.0-5                Full LP     Installed
+VSI AXPVMS OPENSSH V9.9-2A           Full LP     Installed
+VSI AXPVMS OPENVMS V8.4-2L2          Platform    Installed
+VSI AXPVMS SSL V1.4-502A             Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS SSL1 V1.0-2KA             Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS SSL111 V1.1-1W            Full LP     Installed
+VSI AXPVMS SSL3 V3.0-22              Full LP     Installed                                      ISSINOHO AXPVMS BESZEL V0.21-1E2
+                                                                                                ISSINOHO AXPVMS HASS V0.1-2
+                                                                                                ISSINOHO AXPVMS LIGHTTPD V1.4-85E5
+                                                                                                ISSINOHO AXPVMS STEWARD T0.16-1
+                                                                                                ISSINOHO AXPVMS VMSNOTIFY V0.1-0
+                                                                                                ISSINOHO AXPVMS VMSOTEL V0.1-0
+                                                                                                VSI AXPVMS TCPIP V6.0-31
+VSI AXPVMS SSL31 V3.1-4              Full LP     Installed
+VSI AXPVMS TCPIP V6.0-31             Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS TDC_RT V2.3-1220          Full LP     Installed                                      VSI AXPVMS OPENVMS V8.4-2L2
+VSI AXPVMS VGIT V1.4-1B              Full LP     Installed
+VSI AXPVMS VMS V8.4-2L2              Oper System Installed VSI AXPVMS VMS842L2A_DPML V2.0       VSI AXPVMS CDSA V2.4-320A
+                                                           VSI AXPVMS VMS842L2A_NOTARY V2.0     VSI AXPVMS DWMOTIF V1.7-F
+                                                           VSI AXPVMS VMS842L2A_RTL V10.0       VSI AXPVMS HPBINARYCHECKER V1.1-A
+                                                                                                VSI AXPVMS KERBEROS V3.1-152B
+                                                                                                VSI AXPVMS OPENVMS V8.4-2L2
+                                                                                                VSI AXPVMS TCPIP V6.0-31
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+33 items found
+ 
+VMSINSTAL history file DISK$ALPHASYS:[VMS$COMMON.][SYSUPD]VMSINSTAL.HISTORY;1 contains additional information

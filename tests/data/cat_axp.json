@@ -1,0 +1,340 @@
+[
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENVMS-V0804-2L1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENVMS-V0804-2L1",
+  "package_number": "627",
+  "release_date": "2017-01-01",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "V",
+  "verified": "1",
+  "version": "V8.4-2L1"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_NOTARY-V0200.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_NOTARY-V0200",
+  "package_number": "769",
+  "release_date": "2018-09-24",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V2.0-0"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENVMS-V0804-2L2.",
+  "minos": "V8.4-2L2",
+  "name": "AXPVMS-OPENVMS-V0804-2L2",
+  "package_number": "805",
+  "release_date": "2024-04-17",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "V",
+  "verified": "1",
+  "version": "V8.4-2L2"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_BACKUP-V0200.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_BACKUP-V0200",
+  "package_number": "854",
+  "release_date": "2022-02-26",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V2.0-0"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_DPML-V0200.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_DPML-V0200",
+  "package_number": "859",
+  "release_date": "2022-05-02",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V2.0-0"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-15-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-15-1",
+  "package_number": "1294",
+  "release_date": "2024-09-26",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-15-1"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL31-V0301-4-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL31-V0301-4-1",
+  "package_number": "1321",
+  "release_date": "2024-03-01",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.1-4"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENSSH-V0809-1J-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENSSH-V0809-1J-1",
+  "package_number": "1391",
+  "release_date": "2024-10-22",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V8.9-1J"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-CURL-V0800-1B-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-CURL-V0800-1B-1",
+  "package_number": "1410",
+  "release_date": "2024-11-26",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V8.0-1B"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L1A_SYS-V0400.",
+  "minos": "V8.4-2L1",
+  "name": "VMS842L1A_SYS-V0400",
+  "package_number": "1421",
+  "release_date": "2024-10-04",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V4.0-0"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_SYS-V0400.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_SYS-V0400",
+  "package_number": "1422",
+  "release_date": "2024-10-04",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V4.0-0"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_RTL-V0900.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_RTL-V0900",
+  "package_number": "1431",
+  "release_date": "2025-01-15",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V9.0-0"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENSSH-V0809-1K01-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENSSH-V0809-1K01-1",
+  "package_number": "1497",
+  "release_date": "2025-04-03",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V8.9-1K01"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-16-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-16-1",
+  "package_number": "1542",
+  "release_date": "2025-06-30",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-16"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_RTL-V1000.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_RTL-V1000",
+  "package_number": "1577",
+  "release_date": "2025-09-03",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V10.0-0"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-CURL-V0813-0-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-CURL-V0813-0-1",
+  "package_number": "1585",
+  "release_date": "2025-09-10",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V8.13-0"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENSSH-V0909A-2-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENSSH-V0909A-2-1",
+  "package_number": "1617",
+  "release_date": "2025-10-12",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V9.9-2A"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-18-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-18-1",
+  "package_number": "1653",
+  "release_date": "2025-12-17",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-18"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENSSH-V0909B-2-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENSSH-V0909B-2-1",
+  "package_number": "1712",
+  "release_date": "2026-03-31",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V9.9-2B"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-19-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-19-1",
+  "package_number": "1732",
+  "release_date": "2026-04-21",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-19"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-20-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-20-1",
+  "package_number": "1743",
+  "release_date": "2026-05-05",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-20"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-OPENSSH-V0909-2C-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-OPENSSH-V0909-2C-1",
+  "package_number": "1751",
+  "release_date": "2026-05-19",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V9.9-2C"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-21-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-21-1",
+  "package_number": "1762",
+  "release_date": "2026-06-24",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-21"
+ },
+ {
+  "description": "Synthetic test entry for AXPVMS-SSL3-V0300-22-1.",
+  "minos": "V8.4-2L1",
+  "name": "AXPVMS-SSL3-V0300-22-1",
+  "package_number": "1809",
+  "release_date": "2026-09-10",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "O",
+  "verified": "1",
+  "version": "V3.0-22"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L1A_SYS-V0500.",
+  "minos": "V8.4-2L1",
+  "name": "VMS842L1A_SYS-V0500",
+  "package_number": "1813",
+  "release_date": "2026-10-26",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V5.0-0"
+ },
+ {
+  "description": "Synthetic test entry for VMS842L2A_SYS-V0500.",
+  "minos": "V8.4-2L2",
+  "name": "VMS842L2A_SYS-V0500",
+  "package_number": "1814",
+  "release_date": "2026-10-26",
+  "sysarch": [
+   "AXP"
+  ],
+  "type": "E",
+  "verified": "1",
+  "version": "V5.0-0"
+ }
+]

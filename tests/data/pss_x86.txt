@@ -1,0 +1,118 @@
+
+
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+PRODUCT                              KIT TYPE    STATE     MAINTENANCE                          REFERENCED BY
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+ISSINOHO X86VMS BESZEL V0.21-1E1     Full LP     Installed
+ISSINOHO X86VMS BISON V3.8-2E2       Full LP     Installed
+ISSINOHO X86VMS BZIP2 V1.0-8E1       Full LP     Installed
+ISSINOHO X86VMS DIFFUTILS V3.12-0E1  Full LP     Installed
+ISSINOHO X86VMS FASTFETCH V0.2-1     Full LP     Installed
+ISSINOHO X86VMS FINDUTILS V4.11-0E3  Full LP     Installed
+ISSINOHO X86VMS FLEX V2.6-4E1        Full LP     Installed
+ISSINOHO X86VMS GAWK V5.4-1E1        Full LP     Installed
+ISSINOHO X86VMS GREP V3.12-3         Full LP     Installed
+ISSINOHO X86VMS GZIP V1.15-0E1       Full LP     Installed
+ISSINOHO X86VMS HASS V0.1-2          Full LP     Installed
+ISSINOHO X86VMS HISTSH T0.2-2        Full LP     Installed
+ISSINOHO X86VMS LESS V7.10-0E1       Full LP     Installed
+ISSINOHO X86VMS LIBXML2 V2.15-4E1    Full LP     Installed
+ISSINOHO X86VMS LIGHTTPD V1.4-85E5   Full LP     Installed
+ISSINOHO X86VMS M4 V1.4-21E1         Full LP     Installed                                      ISSINOHO X86VMS BISON V3.8-2E2
+                                                                                                ISSINOHO X86VMS FLEX V2.6-4E1
+ISSINOHO X86VMS MAKE V4.4-1E1        Full LP     Installed
+ISSINOHO X86VMS PAKGEN V1.4-0        Full LP     Installed
+ISSINOHO X86VMS PATCH V2.8-0E1       Full LP     Installed
+ISSINOHO X86VMS PCRE2 V10.49-1       Full LP     Installed
+ISSINOHO X86VMS RSYNC T0.1-1         Full LP     Installed
+ISSINOHO X86VMS SED V4.10-1          Full LP     Installed
+ISSINOHO X86VMS STEWARD T0.16-0      Full LP     Installed
+ISSINOHO X86VMS TAR V1.35-0E1        Full LP     Installed
+ISSINOHO X86VMS VFTP T0.1-1          Full LP     Installed
+ISSINOHO X86VMS VIM V9.2-1240E2      Full LP     Installed
+ISSINOHO X86VMS VLMF T0.1-2          Full LP     Installed
+ISSINOHO X86VMS VMSCURL V8.22-0E2    Full LP     Installed
+ISSINOHO X86VMS VMSMARIADB V11.4-13E3 Full LP     Installed
+ISSINOHO X86VMS VMSNOTIFY V0.1-0     Full LP     Installed
+ISSINOHO X86VMS VMSOTEL V0.1-0       Full LP     Installed
+ISSINOHO X86VMS VMSPHP V8.5-12E2     Full LP     Installed
+ISSINOHO X86VMS VMSSQLITE V3.54-1E1  Full LP     Installed
+ISSINOHO X86VMS VTOP T0.1-0          Full LP     Installed
+ISSINOHO X86VMS VTREE T0.1-1         Full LP     Installed
+ISSINOHO X86VMS WGET V1.25-0E2       Full LP     Installed
+ISSINOHO X86VMS XZ V5.8-4E1          Full LP     Installed
+ISSINOHO X86VMS ZLIB V1.3-2E1        Full LP     Installed
+ISSINOHO X86VMS ZSTD V1.5-7E1        Full LP     Installed
+MIMER X86VMS MIMER1108E V11.0-8E     Full LP     Installed
+SCI VMS DFU V3.5-100                 Full LP     Installed
+VMSPORTS X86VMS PERL534 T5.34-1      Full LP     Installed
+VSI X86VMS ANT V1.10-14A             Full LP     Installed
+VSI X86VMS APACHEWS V2.4-62          Full LP     Installed
+VSI X86VMS AVAIL_MAN_BASE E9.2-4     Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS BASIC V1.11-1             Full LP     Installed
+VSI X86VMS BLISS V1.15-148           Full LP     Installed
+VSI X86VMS C V7.7-3                  Full LP     Installed
+VSI X86VMS CIVETWEB V1.17-0          Full LP     Installed
+VSI X86VMS CMS V4.8-14               Full LP     Installed
+VSI X86VMS COBOL V3.4-3              Full LP     Installed
+VSI X86VMS CURL V8.13-0              Full LP     Installed
+VSI X86VMS CXX V10.1-3U1             Full LP     Installed
+VSI X86VMS DCPS V2.8-2               Full LP     Installed
+VSI X86VMS DECNET_PHASE_IV E9.2-4    Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS DECSET V13.0-3            Full LP     Installed
+VSI X86VMS DTM V4.5-7                Full LP     Installed
+VSI X86VMS DWMOTIF V1.8-2            Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS DWMOTIF_SUPPORT E9.2-4    Full LP     Installed                                      VSI X86VMS VMS E9.2-4
+VSI X86VMS ENVMGR V1.9-6             Full LP     Installed                                      VSI X86VMS CMS V4.8-14
+                                                                                                VSI X86VMS MMS V4.0-5
+                                                                                                VSI X86VMS SCA V5.2-3
+VSI X86VMS FORTRAN V8.7-1            Full LP     Installed
+VSI X86VMS GIT V2.44-1C              Full LP     Installed
+VSI X86VMS GNUPLOT V5.0-2            Full LP     Installed
+VSI X86VMS GNV V3.0-2F               Full LP     Installed
+VSI X86VMS KERBEROS V3.3-5A          Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS LIBPQ V13.4-0B            Full LP     Installed
+VSI X86VMS LSE V5.3-3                Full LP     Installed
+VSI X86VMS LUA V5.3-5H               Full LP     Installed
+VSI X86VMS MMS V4.0-5                Full LP     Installed
+VSI X86VMS OBT A1.0-0                Full LP     Installed
+VSI X86VMS OPENJDK80 V8.0-502A       Full LP     Installed
+VSI X86VMS OPENLDAP V2.6-6B          Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS OPENSSH V9.9-2C           Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS OPENVMS E9.2-4            Platform    Installed
+VSI X86VMS PERL542 V5.42-0           Full LP     Installed                                      VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS PHP A8.0-0BUILD001        Full LP     Installed
+VSI X86VMS PYTHON A3.10-0RELEASE008  Full LP     Installed
+VSI X86VMS PYTHWHLS A1.1-6FIX07      Full LP     Installed
+VSI X86VMS SCA V5.2-3                Full LP     Installed
+VSI X86VMS SQLRELAY X1.9-3D          Full LP     Installed
+VSI X86VMS SSL3 V3.0-22              Full LP     Installed                                      ISSINOHO X86VMS BESZEL V0.21-1E1
+                                                                                                ISSINOHO X86VMS HASS V0.1-2
+                                                                                                ISSINOHO X86VMS LIGHTTPD V1.4-85E5
+                                                                                                ISSINOHO X86VMS STEWARD T0.16-0
+                                                                                                ISSINOHO X86VMS VFTP T0.1-1
+                                                                                                ISSINOHO X86VMS VMSCURL V8.22-0E2
+                                                                                                ISSINOHO X86VMS VMSMARIADB V11.4-13E3
+                                                                                                ISSINOHO X86VMS VMSNOTIFY V0.1-0
+                                                                                                ISSINOHO X86VMS VMSOTEL V0.1-0
+                                                                                                ISSINOHO X86VMS VMSPHP V8.5-12E2
+                                                                                                ISSINOHO X86VMS WGET V1.25-0E2
+                                                                                                VSI X86VMS OPENVMS E9.2-4
+                                                                                                VSI X86VMS TCPIP V6.0-31
+VSI X86VMS SSL31 V3.1-4              Full LP     Installed
+VSI X86VMS TCPIP V6.0-31             Full LP     Installed                                      ISSINOHO X86VMS VMSPHP V8.5-12E2
+                                                                                                VSI X86VMS OPENVMS E9.2-4
+VSI X86VMS VMS E9.2-4                Oper System Installed                                      VSI X86VMS DWMOTIF V1.8-2
+                                                                                                VSI X86VMS KERBEROS V3.3-5A
+                                                                                                VSI X86VMS OPENVMS E9.2-4
+                                                                                                VSI X86VMS TCPIP V6.0-31
+VSI X86VMS VMSI18N V9.2              Full LP     Installed
+VSI X86VMS VMSSPI V9.0-28            Full LP     Installed
+VSI X86VMS VSP E1.0-3                Full LP     Installed
+VSI X86VMS WEBUI V4.2-0              Full LP     Installed
+VSI X86VMS X86ASM A10.1-3_250403     Full LP     Installed
+WEB VMS FIND V1.6                    Full LP     Installed
+------------------------------------ ----------- --------- ------------------------------------ ------------------------------------
+90 items found
+ 
+VMSINSTAL history file DISK$X86SYS:[VMS$COMMON.][SYSUPD]VMSINSTAL.HISTORY;1 contains additional information
