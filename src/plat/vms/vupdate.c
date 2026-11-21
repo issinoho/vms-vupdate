@@ -1466,9 +1466,9 @@ static unsigned int do_upgrade(void)
             msg(VU__REBOOT, 1, nreboot == 1 ? "the kit listed above" : "the kits listed above", 0);
         }
         if (!download_only && done)
-            printf("Kits may name post-installation steps (e.g. SET SERVER ACME_SERVER/RESTART):"
-                   " see their\nSpecial Installation Instructions in "
-                   "SYS$HELP:<kit>.RELEASE_NOTES.\n");
+            printf("\nSome kits name steps to take after installing (such as\n"
+                   "SET SERVER ACME_SERVER/RESTART): see \"Special Installation Instructions\"\n"
+                   "in each kit's SYS$HELP:<kit>.RELEASE_NOTES.\n");
         free(state);
         if (nfail)
             st = msg_nn(VU__PARTIAL, (unsigned int)done, (unsigned int)nfail);

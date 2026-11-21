@@ -120,3 +120,9 @@ declined (`%VSIKIT-I-NOTNEEDED`: only with FILESYS), both rolled back. TIMEZONE'
 is not authoritative. Post-install steps named by kits: SET SERVER ACME_SERVER/RESTART (LDAP, PWDMGMT),
 UCM RESTART (MISC), restart images using PTHREAD$RTL, @SYS$MANAGER:UTC$TIME_SETUP in the affected
 Canadian zones (TIMEZONE). PCSI-I-RETAIN: PWDMGMT kept the newer SYS$STARLET_C.TLB already there.
+
+N24. Reboot-kit run (2026-11-21, user at AXPBOX, UPGRADE/PATCHES): all 16 installed in one run. MISC and
+RMSDEF failed in pass 1 (FILESYS/UTILITY not yet in), and installed in the retry pass (D22). Afterwards
+CHECK lists no patches: all 38 L2 patches plus VMS842L2A_PCSI V1.0 went in on 2026-11-21 (39 items in
+PRODUCT SHOW HISTORY). Several kits retained newer files already on the system (PCSI-I-RETAIN). The node
+needs the reboot the kits ask for.
