@@ -97,3 +97,8 @@ findings of that kind (beside names, /ALL, /SECURITY). /NOREBOOT drops kits with
 transitively, kits needing a dropped kit. VUPDATE asks once for the whole list, so PCSI's own
 selection question is always skipped (NOCONFIRM); kit-specific questions still come. The OS product
 VMS ("Oper System") is no longer reported: OPENVMS stands for the OS.
+
+D20 (2026-11-21, phase 3). **Help**: a DCL help library built from src/plat/vms/vupdate.hlp into
+VUPDATE$ROOT:[HELP]VUPDATE.HLB, shown by `VUPDATE HELP [topic...]` (LBR$OUTPUT_HELP, prompting on a
+terminal). Inserting it into SYS$HELP:HELPLIB.HLB, for plain `HELP VUPDATE`, is a kit-install
+question (system-wide: ask the user, phase 4).

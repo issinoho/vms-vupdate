@@ -6,6 +6,7 @@
 !   VUPDATE UPGRADE [product[,...]] [/ALL] [/PATCHES] [/UPDATES] [/SECURITY]
 !                   [/NOREBOOT] [/NOCONFIRM] [/FIELD_TEST] [/DOWNLOAD_ONLY]
 !                   [/WORK=directory] [/REFRESH]
+!   VUPDATE HELP [topic...]
 
 define type ACTIONS
     keyword LOGIN,   syntax=VU_LOGIN
@@ -13,6 +14,7 @@ define type ACTIONS
     keyword CHECK,   syntax=VU_CHECK
     keyword SHOW,    syntax=VU_SHOW
     keyword UPGRADE, syntax=VU_UPGRADE
+    keyword HELP,    syntax=VU_HELP
 
 define verb VUPDATE
     image VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE
@@ -54,3 +56,7 @@ define syntax VU_UPGRADE
     qualifier REFRESH
     disallow not (PRODUCT or ALL or SECURITY or PATCHES or UPDATES)
     disallow PRODUCT and ALL
+
+define syntax VU_HELP
+    parameter P1, label=ACTION, value(required, type=ACTIONS)
+    parameter P2, label=TOPIC, value(type=$REST_OF_LINE)

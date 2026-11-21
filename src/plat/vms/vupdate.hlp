@@ -1,0 +1,192 @@
+1 VUPDATE
+ Checks this system's VSI products, OpenVMS patches and security fixes
+ against the VSI Service Platform (sp.vmssoftware.com), and downloads and
+ installs the ones you choose. Like a package manager: VUPDATE CHECK
+ lists what is new, VUPDATE UPGRADE installs it.
+
+ Format
+
+   VUPDATE action [parameters] [/qualifiers]
+
+ The actions are LOGIN, LOGOUT, CHECK, SHOW, UPGRADE and HELP. A VSI
+ portal account is needed (VUPDATE LOGIN once per node).
+
+ VUPDATE never installs an OpenVMS upgrade: it reports one. Kits must pass
+ VSI's signature check (PCSI SIGNED_KIT) or PRODUCT INSTALL refuses them.
+
+2 LOGIN
+ Asks for your VSI portal user name (e-mail) and password, checks them
+ with the VSI sign-in service and saves them for later VUPDATE commands
+ (including the nightly check) in VUPDATE$ROOT:[DATA]CREDENTIALS.DAT.
+
+ The file is readable by its owner only. Its contents are sealed with a
+ key derived from this node's identity, so a copy is useless on another
+ node and a modified file is refused. This is not secrecy from privileged
+ users: anyone who can read the file on this node can recover the
+ password. Changing SCSNODE means logging in again.
+
+ Format
+
+   VUPDATE LOGIN [/USERNAME="e-mail"]
+
+3 /USERNAME
+   /USERNAME="e-mail"
+
+ Gives the portal user name instead of being asked for it. Quote the
+ value: in DCL an unquoted @ starts an indirect command file.
+
+2 LOGOUT
+ Deletes the saved credentials (all versions of the file).
+
+ Format
+
+   VUPDATE LOGOUT
+
+2 CHECK
+ Compares the installed products (PRODUCT SHOW PRODUCT) with the VSI
+ catalogue for this architecture and OpenVMS version, and lists:
+
+   OpenVMS upgrades   a newer OpenVMS kit (reported only)
+   Patches            OpenVMS patch kits not yet installed, or newer ones
+   Updates            newer kits of installed VSI layered products
+
+ Each line shows the installed and the new version, and flags: "security"
+ when the kit's description names a CVE or a security fix, "reboot" when
+ the kit needs a restart, "field test" for a non-release kit.
+
+ The catalogue is cached for an hour and package details for a day, in
+ VUPDATE$ROOT:[CACHE]; a CHECK answered from the cache needs no network.
+
+ Exit status: success (VUPDATE-S-CURRENT) when there is nothing to do,
+ informational (VUPDATE-I-UPDATES) when there is, so a batch job can test
+ $STATUS.
+
+ Format
+
+   VUPDATE CHECK [/qualifiers]
+
+3 /ALL
+ Also lists the products that are up to date and the installed VSI
+ products the catalogue doesn't have.
+
+3 /FIELD_TEST
+ Also offers field-test, advance and early kits (versions starting A, B,
+ E, T or X). Without it, such kits are offered only for a product whose
+ installed version is itself a field-test one.
+
+3 /OUTPUT
+   /OUTPUT=file
+
+ Writes the report to a file instead of the terminal.
+
+3 /REFRESH
+ Fetches the catalogue and package details now instead of using the
+ cache.
+
+3 /SECURITY
+ Lists only the kits flagged as security fixes.
+
+2 SHOW
+ Shows the VSI portal's details of a product's newest kit for this node:
+ version and release date, the OpenVMS versions it supports, whether it
+ needs a restart, its files with sizes and MD5, the kits it needs first
+ (marked when installed, or when made for another OpenVMS version), the
+ other kits of the product and VSI's description.
+
+ Format
+
+   VUPDATE SHOW product [/FIELD_TEST] [/REFRESH]
+
+ The product is the PCSI name (COBOL, OPENSSH) or a patch family
+ (VMS842L2A_SYS).
+
+2 UPGRADE
+ Downloads and installs kits: the products named, or a whole class with
+ /ALL, /PATCHES, /UPDATES or /SECURITY. Kits they need first are added
+ when not installed already, and everything is put in install order.
+
+ VUPDATE shows the list and asks once before installing. For each kit it
+ then downloads the files, checks their MD5 against the portal's, unpacks
+ the ZIP and runs PRODUCT INSTALL on your terminal (patches with
+ /SAVE_RECOVERY_DATA, so PRODUCT UNDO PATCH can take them out again). The
+ kit directory is deleted after a successful install and kept when one
+ fails. VUPDATE stops after a kit that needs a reboot.
+
+ Installing needs the privileges PRODUCT INSTALL needs.
+
+ Format
+
+   VUPDATE UPGRADE [product[,...]] [/qualifiers]
+
+3 /ALL
+ Every patch and update CHECK lists (not OpenVMS upgrades).
+
+3 /CONFIRM
+   /CONFIRM (default)
+   /NOCONFIRM
+
+ Asks before installing. /NOCONFIRM installs without asking (for batch
+ jobs); PCSI may still ask kit-specific questions.
+
+3 /NOCONFIRM
+ Installs without asking first. See /CONFIRM.
+
+3 /DOWNLOAD_ONLY
+ Downloads, checks and unpacks the kits but doesn't install them. Each kit
+ is left in its own directory under the work directory, ready for PRODUCT
+ INSTALL.
+
+3 /FIELD_TEST
+ As for CHECK: also considers field-test kits.
+
+3 /PATCHES
+ Every OpenVMS patch CHECK lists.
+
+3 /NOREBOOT
+ Leaves out the kits that need a restart, and the kits that need one of
+ those first. See /REBOOT.
+
+3 /REBOOT
+   /REBOOT (default)
+   /NOREBOOT
+
+ /NOREBOOT leaves out the kits that need a restart, and the kits that need
+ one of those first. Use it to install what can go in without a reboot.
+
+3 /REFRESH
+ As for CHECK: fetches the catalogue and details now.
+
+3 /SECURITY
+ Every kit flagged as a security fix.
+
+3 /UPDATES
+ Every layered-product update CHECK lists.
+
+3 /WORK
+   /WORK=directory
+
+ Where kits are downloaded and unpacked; default VUPDATE$ROOT:[KITS].
+ Each kit gets a subdirectory.
+
+2 HELP
+ Shows this help. VUPDATE HELP UPGRADE /NOREBOOT goes straight to a topic.
+
+ Format
+
+   VUPDATE HELP [topic...]
+
+2 Logical_names
+ VUPDATE$ROOT          the installation root ([SYSEXE], [DATA], [CACHE],
+                       [KITS], [HELP])
+ VUPDATE$CREDENTIALS   another credential file than [DATA]CREDENTIALS.DAT
+ VUPDATE$CA_FILE       another CA bundle than [DATA]CACERT.PEM
+ VUPDATE$PROXY         a proxy URL for all VUPDATE connections
+
+2 Examples
+   $ VUPDATE LOGIN
+   $ VUPDATE CHECK
+   $ VUPDATE CHECK/SECURITY
+   $ VUPDATE SHOW OPENSSH
+   $ VUPDATE UPGRADE OPENSSH
+   $ VUPDATE UPGRADE/PATCHES/NOREBOOT
+   $ VUPDATE UPGRADE/ALL/DOWNLOAD_ONLY/WORK=DKA100:[KITS]

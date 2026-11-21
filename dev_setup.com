@@ -23,6 +23,9 @@ $ if f$parse("VUPDATE$ROOT:[SYSEXE]") .eqs. "" then create/directory VUPDATE$ROO
 $ if f$parse("VUPDATE$ROOT:[DATA]") .eqs. "" then -
      create/directory/protection=(S:RWE,O:RWE,G,W) VUPDATE$ROOT:[DATA]
 $ if f$parse("VUPDATE$ROOT:[CACHE]") .eqs. "" then create/directory VUPDATE$ROOT:[CACHE]
+$ if f$parse("VUPDATE$ROOT:[HELP]") .eqs. "" then create/directory VUPDATE$ROOT:[HELP]
+$ copy/nolog 'bld'VUPDATE.HLB VUPDATE$ROOT:[HELP]VUPDATE.HLB
+$ purge/nolog VUPDATE$ROOT:[HELP]VUPDATE.HLB
 $ copy/nolog 'bld'VUPDATE.EXE VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE
 $ purge/nolog VUPDATE$ROOT:[SYSEXE]VUPDATE.EXE
 $ if p1 .nes. ""

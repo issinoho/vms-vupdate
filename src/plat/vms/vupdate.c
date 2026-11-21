@@ -23,6 +23,8 @@
 #include <descrip.h>
 #include <fcntl.h>
 #include <iodef.h>
+#include <hlpdef.h>
+#include <lbr$routines.h>
 #include <ctype.h>
 #include <lib$routines.h>
 #include <ssdef.h>
@@ -1243,13 +1245,32 @@ out:
     return st;
 }
 
+/* ---------- HELP ---------- */
+
+/* The help library VUPDATE$ROOT:[HELP]VUPDATE.HLB (src/plat/vms/vupdate.hlp),
+ * shown like DCL HELP: interactive prompting on a terminal. */
+static unsigned int do_help(void)
+{
+    char topic[256], line[300];
+    static const char lib[] = "VUPDATE$ROOT:[HELP]VUPDATE.HLB";
+    struct dsc$descriptor_s dl, dlib;
+    unsigned int flags = isatty(0) ? HLP$M_PROMPT : 0, st;
+    value("TOPIC", topic, sizeof topic);
+    snprintf(line, sizeof line, "VUPDATE %s", topic);
+    rtrim(line);
+    dsc(&dl, line, strlen(line));
+    dsc(&dlib, lib, strlen(lib));
+    st = lbr$output_help(lib$put_output, 0, &dl, &dlib, &flags, lib$get_input);
+    return (st & 1) ? SS$_NORMAL : st;
+}
+
 /* ---------- main ---------- */
 
 int main(void)
 {
     char action[32];
     if (!value("ACTION", action, sizeof action))
-        return (int)msg(VU__FAILED, 1, "no action given (LOGIN, LOGOUT, CHECK, SHOW, UPGRADE)", 0);
+        return (int)msg(VU__FAILED, 1, "no action given (LOGIN, LOGOUT, CHECK, SHOW, UPGRADE, HELP)", 0);
     if (strncmp(action, "LOGI", 4) == 0)
         return (int)do_login();
     if (strncmp(action, "LOGO", 4) == 0)
@@ -1260,5 +1281,7 @@ int main(void)
         return (int)do_show();
     if (strncmp(action, "UPGR", 4) == 0)
         return (int)do_upgrade();
+    if (strncmp(action, "HELP", 4) == 0)
+        return (int)do_help();
     return (int)msg(VU__FAILED, 1, "unknown action", 0);
 }

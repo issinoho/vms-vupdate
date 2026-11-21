@@ -122,6 +122,8 @@ $ cc'cflags'/object=[.build]vupdate.obj [.src.plat.vms]vupdate.c
 $ if $severity .ne. 1 then goto failed
 $ message/object=[.build]vupdate_msg.obj [.src.plat.vms]vupdate_msg.msg
 $ if $severity .ne. 1 then goto failed
+$ library/create/help [.build]vupdate.hlb [.src.plat.vms]vupdate.hlp
+$ if $severity .ne. 1 then goto failed
 $! The CLD must compile (into a private copy of the tables: DCLTABLES is untouched).
 $ set command/tables=sys$library:dcltables/output=[.build]dcltables_check.exe -
      [.src.plat.vms]vupdate.cld
