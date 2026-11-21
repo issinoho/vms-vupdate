@@ -6,6 +6,7 @@
 #include "vu_auth.h"
 #include "vu_store.h"
 
+#include <stdio.h>
 #include <time.h>
 
 /* Return codes. */
@@ -41,5 +42,10 @@ int vu_portal_catalog(vu_session *s, const char *arch, char **json);
 
 /* GET /vsp/pkgman/packages/package with X-Pkg-Id. *json gets the reply (free()). */
 int vu_portal_detail(vu_session *s, long package_number, char **json);
+
+/* Download the file save_as (package_file_number file_number) into out, for a node
+ * running os. Three portal steps, see vu_portal.c and N18. *bytes gets the size. */
+int vu_portal_download(vu_session *s, long file_number, const char *os, const char *save_as,
+                       FILE *out, unsigned long *bytes);
 
 #endif

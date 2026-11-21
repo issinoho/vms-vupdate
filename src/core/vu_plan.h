@@ -57,6 +57,10 @@ int vu_plan_build(const vu_inventory *inv, const vu_catalog *cat, const char *os
                   int arch, int opts, vu_plan *plan);
 void vu_plan_free(vu_plan *plan);
 
+/* Is the prerequisite kit (portal kit name, e.g. "VMS842L2A_NOTARY-V0200") already
+ * installed: the product present at that version or newer? 1 yes, 0 no. */
+int vu_prereq_installed(const vu_inventory *inv, const char *kitname);
+
 /* Install order for a set of kits with prerequisites (from details).
  * items[i] lists kitnames; prereq_of(i) are given as parallel arrays: for item i,
  * prereq[i][0..nprereq[i]-1] are kit names that must be installed first (only those

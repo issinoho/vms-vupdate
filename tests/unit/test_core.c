@@ -436,6 +436,38 @@ static void test_auth(void)
     CHECK(vu_token_parse("{\"x\":1}", &t) == -1);
 }
 
+static void test_kitfiles(void)
+{
+    char pr[32], ba[16], pd[48];
+    vu_inventory inv;
+    char *a = need("tests/data/pss_axp.txt");
+    CHECK(vu_kitfile_kind("VSI-AXPVMS-VMS842L2A_SYS-V0500--4.PCSI$COMPRESSED") == VU_KF_COMPRESSED);
+    CHECK(vu_kitfile_kind("vsi-axpvms-vms842l2a_sys-v0500--4.pcsi$compressed_esw;1") == VU_KF_MANIFEST);
+    CHECK(vu_kitfile_kind("VSI-X86VMS-COBOL-V0305-02-1.PCSI") == VU_KF_PCSI);
+    CHECK(vu_kitfile_kind("VSI-X86VMS-COBOL-V0305-02-1.PCSI_ESW") == VU_KF_MANIFEST);
+    CHECK(vu_kitfile_kind("VSI-AXPVMS-VMS842L2A_TIMEZONE-V0100--4.PCSI$COMPRESSED_VNC") == VU_KF_MANIFEST);
+    CHECK(vu_kitfile_kind("README.TXT") == VU_KF_NONE);
+    CHECK(vu_kitfile_kind("COBOL_RELEASE_NOTES.PDF") == VU_KF_NONE);
+    CHECK(vu_kitfile_parse("VSI-AXPVMS-VMS842L2A_SYS-V0500--4.PCSI$COMPRESSED", pr, sizeof pr,
+                           ba, sizeof ba, pd, sizeof pd) == 1);
+    CHECK_STR(pr, "VSI");
+    CHECK_STR(ba, "AXPVMS");
+    CHECK_STR(pd, "VMS842L2A_SYS");
+    CHECK(vu_kitfile_parse("VSI-X86VMS-COBOL-V0305-02-1.PCSI$COMPRESSED;1", pr, sizeof pr, ba,
+                           sizeof ba, pd, sizeof pd) == 1);
+    CHECK_STR(pd, "COBOL");
+    CHECK(vu_kitfile_parse("NOTAKIT.PCSI", pr, sizeof pr, ba, sizeof ba, pd, sizeof pd) == 0);
+    if (a && vu_pcsi_parse(a, &inv) == 0) {
+        /* NOTARY V2.0 is applied on the Alpha; SYS V5.0 isn't. */
+        CHECK(vu_prereq_installed(&inv, "VMS842L2A_NOTARY-V0200") == 1);
+        CHECK(vu_prereq_installed(&inv, "VMS842L2A_NOTARY-V0300") == 0);
+        CHECK(vu_prereq_installed(&inv, "VMS842L2A_SYS-V0500") == 0);
+        CHECK(vu_prereq_installed(&inv, "AXPVMS-OPENSSH-V0909-2A-1") == 1);
+        vu_inventory_free(&inv);
+    }
+    free(a);
+}
+
 static void test_report(void)
 {
     vu_product p;
@@ -505,6 +537,7 @@ int main(void)
     test_order();
     test_auth();
     test_report();
+    test_kitfiles();
     test_real();
     printf("%d checks, %d failed\n", checks, fails);
     return fails ? EXIT_FAILURE : EXIT_SUCCESS;

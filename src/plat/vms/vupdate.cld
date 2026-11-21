@@ -1,11 +1,10 @@
-! vupdate.cld - DCL verb VUPDATE. Phase 1: LOGIN, LOGOUT and CHECK work;
-! SHOW and UPGRADE parse but report "not implemented yet".
+! vupdate.cld - DCL verb VUPDATE.
 !   VUPDATE LOGIN [/USERNAME=e-mail]
 !   VUPDATE LOGOUT
 !   VUPDATE CHECK [/SECURITY] [/FIELD_TEST] [/ALL] [/REFRESH] [/OUTPUT=file]
-!   VUPDATE SHOW product
+!   VUPDATE SHOW product [/FIELD_TEST] [/REFRESH]
 !   VUPDATE UPGRADE [product[,...]] [/ALL] [/SECURITY] [/NOCONFIRM] [/FIELD_TEST]
-!                   [/DOWNLOAD_ONLY] [/WORK=directory]
+!                   [/DOWNLOAD_ONLY] [/WORK=directory] [/REFRESH]
 
 define type ACTIONS
     keyword LOGIN,   syntax=VU_LOGIN
@@ -36,6 +35,8 @@ define syntax VU_CHECK
 define syntax VU_SHOW
     parameter P1, label=ACTION, value(required, type=ACTIONS)
     parameter P2, label=PRODUCT, prompt="Product", value(required)
+    qualifier FIELD_TEST
+    qualifier REFRESH
 
 define syntax VU_UPGRADE
     parameter P1, label=ACTION, value(required, type=ACTIONS)
@@ -46,5 +47,6 @@ define syntax VU_UPGRADE
     qualifier FIELD_TEST
     qualifier DOWNLOAD_ONLY
     qualifier WORK, value(required, type=$FILE)
+    qualifier REFRESH
     disallow not (PRODUCT or ALL or SECURITY)
     disallow PRODUCT and ALL

@@ -260,6 +260,18 @@ void vu_plan_free(vu_plan *pl)
     pl->n = pl->cap = 0;
 }
 
+int vu_prereq_installed(const vu_inventory *inv, const char *kitname)
+{
+    char prod[48], ver[48];
+    const vu_product *p;
+    if (vu_kitname_decode(kitname, prod, sizeof prod, ver, sizeof ver) == 0)
+        return 0;
+    p = vu_inventory_find(inv, prod);
+    if (!p)
+        return 0;
+    return !ver[0] || vu_ver_cmp(p->ver, ver) >= 0;
+}
+
 int vu_install_order(size_t n, const char *const *items, const int *nprereq,
                      const char *const *const *prereq, size_t *order)
 {

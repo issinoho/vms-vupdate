@@ -3,6 +3,7 @@
 #define VU_HTTP_H
 
 #include <stddef.h>
+#include <stdio.h>
 
 typedef struct {
     char *data;   /* the body, NUL-terminated (malloc); NULL on transport failure */
@@ -22,5 +23,10 @@ void vu_http_cleanup(void);
 int vu_http_request(const char *method, const char *url, const char *const *headers,
                     const char *body, size_t maxbytes, vu_resp *r);
 void vu_resp_free(vu_resp *r);
+
+/* GET url into out (binary). A 2xx body goes to out; any other status's body is
+ * kept (first 1 KB) in r->data instead. r->len is the number of bytes written to
+ * out. Returns 0 when a reply arrived (check r->status), -1 on transport failure. */
+int vu_http_download(const char *url, const char *const *headers, FILE *out, vu_resp *r);
 
 #endif

@@ -74,3 +74,20 @@ D15 (2026-11-21, phase 1). **CHECK signs in only when it has to fetch**: the cat
 1 h and package details for 24 h in VUPDATE$ROOT:[CACHE] (/REFRESH skips the cache). A CHECK answered
 from the cache needs neither credentials nor the network. Patch details are fetched for the
 D7 minos merge and for the flags (security text, restart_required) of the patches reported.
+
+D16 (2026-11-21, phase 2). **VUPDATE extracts kit ZIPs itself** (src/app/vu_kit.c, zlib inflate, CRC
+checked, ZIP64 and encryption refused, member names flattened and checked). The Alpha has no unzip
+and x86 only an unsupported one. PCSI kit files are written as fixed 512-byte records (VSI's
+instruction for transferred kits); manifests and other files as Stream_LF. Self-extracting .ZIPEXE
+kits (offsets not adjusted) are handled by working out the prefix from the end-of-directory record.
+
+D17 (2026-11-21, phase 2). **Prerequisites**: from each kit's detail, transitively; those already
+installed (product at that version or newer) or made for another OpenVMS version (L1 variants listed
+on L2 kits, N19) are skipped. Order: vu_install_order (prerequisites first, else plan order).
+installation_order is per kit and ignored across kits. OS upgrades are never installed.
+
+D18 (2026-11-21, phase 2). **Install command**: `PRODUCT INSTALL <product> /PRODUCER /BASE_SYSTEM
+/SOURCE=<kit dir> [/SAVE_RECOVERY_DATA for patches] /OPTIONS=(SIGNED_KIT[,NOCONFIRM])` in a subprocess
+on the user's terminal. SIGNED_KIT makes PCSI refuse a kit that fails VSI signature validation. UPGRADE
+asks before installing (needs a terminal) unless /NOCONFIRM; stops after a kit that needs a reboot.
+The kit directory is deleted after a successful install, kept on failure and with /DOWNLOAD_ONLY.

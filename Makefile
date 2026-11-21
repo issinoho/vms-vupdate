@@ -24,9 +24,13 @@ build/vucheck: tests/unit/vucheck.c $(CORE) build/cJSON.o $(HDRS)
 build/test_store: tests/unit/test_store.c src/app/vu_store.c src/core/vu_auth.c build/cJSON.o $(HDRS) src/app/vu_store.h
 	$(CC) $(CFLAGS) -Isrc/app -o $@ tests/unit/test_store.c src/app/vu_store.c src/core/vu_auth.c build/cJSON.o -lcrypto
 
-test: build/test_core build/test_store
+build/test_kit: tests/unit/test_kit.c src/app/vu_kit.c src/app/vu_kit.h
+	$(CC) $(CFLAGS) -Isrc/app -o $@ tests/unit/test_kit.c src/app/vu_kit.c -lcrypto -lz
+
+test: build/test_core build/test_store build/test_kit
 	./build/test_core
 	./build/test_store
+	./build/test_kit
 
 # vu_portal.c compiles on Linux too (vu_http.c and the VMS main need curl/VMS headers).
 syntax:

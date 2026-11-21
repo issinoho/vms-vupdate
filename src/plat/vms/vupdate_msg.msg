@@ -27,4 +27,18 @@ PCSI        <cannot read the PCSI product list: !AZ>/FAO=1
 NOTERM      <!AZ needs a terminal>/FAO=1
 FAILED      <!AZ>/FAO=1
 
+! Phase 2. New messages go at the end only: the numbers are positional.
+        .SEVERITY       SUCCESS
+DOWNLOADED  <!UL kit!%S downloaded and checked in !AZ>/FAO=2
+INSTALLED   <!UL kit!%S installed>/FAO=1
+        .SEVERITY       INFORMATIONAL
+NOTHING     <nothing to upgrade>
+        .SEVERITY       WARNING
+NOTFOUND    <!AZ: !AZ>/FAO=2
+REBOOT      <!AZ needs a reboot: reboot before installing more kits>/FAO=1
+        .SEVERITY       ERROR
+MD5         <!AZ: MD5 mismatch, expected !AZ>/FAO=2
+KIT         <!AZ: !AZ>/FAO=2
+ABORTED     <!AZ>/FAO=1
+
         .END

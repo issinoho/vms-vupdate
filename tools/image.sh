@@ -25,10 +25,10 @@ DCL
 if [ $# -ge 2 ]; then
     cat "$2" >> "$job"
 else
+    # The credential-free checks use a throwaway store path, never the real one
+    # (a LOGOUT here once deleted the user's saved sign-in, 2026-11-21).
     cat >> "$job" <<'DCL'
-$ write sys$output "== SHOW (not yet) =="
-$ vupdate show cobol
-$ write sys$output "status ", $status
+$ define/process VUPDATE$CREDENTIALS VUPDATE$ROOT:[DATA]NO_SUCH_TEST_STORE.DAT
 $ write sys$output "== LOGIN without a terminal =="
 $ vupdate login/username="vupdate-test@example.invalid"
 $ write sys$output "status ", $status
@@ -38,6 +38,7 @@ $ write sys$output "status ", $status
 $ write sys$output "== CHECK, not signed in =="
 $ vupdate check
 $ write sys$output "status ", $status
+$ deassign/process VUPDATE$CREDENTIALS
 DCL
 fi
 mode=run; [ "$ARCH" = ALPHA ] && mode=batch

@@ -39,4 +39,19 @@ const vu_product *vu_inventory_find(const vu_inventory *inv, const char *name);
 /* Parse "PRODUCER BASE NAME VERSION" into a product. Returns 1 on success. */
 int vu_pcsi_parse_spec(const char *spec, size_t len, vu_product *out);
 
+/* Kit files in a downloaded ZIP. */
+#define VU_KF_NONE 0
+#define VU_KF_PCSI 1       /* .PCSI */
+#define VU_KF_COMPRESSED 2 /* .PCSI$COMPRESSED */
+#define VU_KF_MANIFEST 3   /* signature manifest: .PCSI[$COMPRESSED]_ESW or _VNC */
+
+/* Classify a file name (any case, version ";n" ignored). */
+int vu_kitfile_kind(const char *filename);
+
+/* Split a PCSI kit file name such as "VSI-AXPVMS-VMS842L2A_SYS-V0500--4.PCSI$COMPRESSED"
+ * into producer (VSI), base (AXPVMS) and product (VMS842L2A_SYS). Returns 1 on
+ * success, 0 when the name isn't producer-base-product-version. */
+int vu_kitfile_parse(const char *filename, char *producer, size_t prodsz, char *base,
+                     size_t basesz, char *product, size_t productsz);
+
 #endif

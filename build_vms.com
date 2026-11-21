@@ -21,7 +21,9 @@ $ float = ""
 $ if arch .eqs. "ALPHA" then float = "/FLOAT=IEEE_FLOAT/IEEE_MODE=DENORM_RESULTS"
 $! Under /STANDARD=C99 only ANSI names get the DECC$ prefix: ALL_ENTRIES maps the rest.
 $ base = "/POINTER_SIZE=32/PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES/NAMES=(AS_IS,SHORTENED)" + float
-$ cflags = "/STANDARD=C99" + base + "/INCLUDE=([.src.core],[.src.third.cjson],[.src.app])"
+$ zinc = ""
+$ if f$trnlnm("ZLIB$ROOT") .nes. "" then zinc = ",ZLIB$ROOT:[INCLUDE]"
+$ cflags = "/STANDARD=C99" + base + "/INCLUDE=([.src.core],[.src.third.cjson],[.src.app]''zinc')"
 $ if f$trnlnm("SSL3$INCLUDE") .eqs. ""
 $ then
 $   write sys$output "build: SSL3$INCLUDE is not defined (VSI OpenSSL 3 kit)"
@@ -70,6 +72,21 @@ $ link/executable=[.build]test_store.exe [.build]test_store.obj,vu_store.obj,-
 $ if $severity .ne. 1 then goto failed
 $ run [.build]test_store
 $ if .not. $status then goto failed
+$ if f$trnlnm("ZLIB$ROOT") .eqs. ""
+$ then
+$   write sys$output "build: define ZLIB$ROOT first (tools/env-<node>.com)"
+$   goto failed
+$ endif
+$ cc'cflags'/object=[.build]vu_kit.obj [.src.app]vu_kit.c
+$ if $severity .ne. 1 then goto failed
+$ cc'cflags'/object=[.build]test_kit.obj [.tests.unit]test_kit.c
+$ if $severity .ne. 1 then goto failed
+$! Sticky defaults: the ZLIB$ROOT library last, or [.build]ssl.opt is looked for there.
+$ link/executable=[.build]test_kit.exe [.build]test_kit.obj,[.build]vu_kit.obj,-
+     [.build]ssl.opt/options,ZLIB$ROOT:[LIB]LIBZ.OLB/library
+$ if $severity .ne. 1 then goto failed
+$ run [.build]test_kit
+$ if .not. $status then goto failed
 $ write sys$output "TEST-OK"
 $ exit 1
 $!
@@ -89,7 +106,7 @@ $!
 $ image:
 $ gosub curl_setup
 $ if .not. curl_ok then goto failed
-$ app = "vu_store,vu_http,vu_portal"
+$ app = "vu_store,vu_http,vu_portal,vu_kit"
 $ objs = ""
 $ i = 0
 $ app_loop:

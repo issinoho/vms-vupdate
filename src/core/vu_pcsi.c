@@ -12,6 +12,7 @@
  * and the product-name column width don't matter.
  */
 #include "vu_pcsi.h"
+#include "vu_ver.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -253,4 +254,61 @@ void vu_inventory_free(vu_inventory *inv)
     free(inv->p);
     inv->p = NULL;
     inv->n = inv->cap = 0;
+}
+
+static int ends_ci(const char *s, size_t n, const char *suffix)
+{
+    size_t l = strlen(suffix), i;
+    if (n < l)
+        return 0;
+    for (i = 0; i < l; i++)
+        if (toupper((unsigned char)s[n - l + i]) != toupper((unsigned char)suffix[i]))
+            return 0;
+    return 1;
+}
+
+static size_t name_len(const char *f)
+{
+    const char *semi = strchr(f, ';');
+    return semi ? (size_t)(semi - f) : strlen(f);
+}
+
+int vu_kitfile_kind(const char *f)
+{
+    size_t n = name_len(f);
+    if (ends_ci(f, n, ".PCSI$COMPRESSED_ESW") || ends_ci(f, n, ".PCSI_ESW")
+        || ends_ci(f, n, ".PCSI$COMPRESSED_VNC") || ends_ci(f, n, ".PCSI_VNC"))
+        return VU_KF_MANIFEST;
+    if (ends_ci(f, n, ".PCSI$COMPRESSED"))
+        return VU_KF_COMPRESSED;
+    if (ends_ci(f, n, ".PCSI"))
+        return VU_KF_PCSI;
+    return VU_KF_NONE;
+}
+
+int vu_kitfile_parse(const char *f, char *producer, size_t prodsz, char *base, size_t basesz,
+                     char *product, size_t productsz)
+{
+    char stem[128], ver[48];
+    const char *d1, *d2, *dot;
+    size_t n = name_len(f);
+    dot = memchr(f, '.', n);
+    if (dot)
+        n = (size_t)(dot - f);
+    if (n >= sizeof stem)
+        return 0;
+    memcpy(stem, f, n);
+    stem[n] = '\0';
+    d1 = strchr(stem, '-');
+    d2 = d1 ? strchr(d1 + 1, '-') : NULL;
+    if (!d1 || !d2 || (size_t)(d1 - stem) >= prodsz || (size_t)(d2 - d1 - 1) >= basesz)
+        return 0;
+    memcpy(producer, stem, (size_t)(d1 - stem));
+    producer[d1 - stem] = '\0';
+    memcpy(base, d1 + 1, (size_t)(d2 - d1 - 1));
+    base[d2 - d1 - 1] = '\0';
+    /* The product is what the portal kit-name decoder finds after the prefixes. */
+    if (vu_kitname_decode(d2 + 1, product, productsz, ver, sizeof ver) == 0 || !product[0])
+        return 0;
+    return 1;
 }

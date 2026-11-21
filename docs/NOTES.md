@@ -77,3 +77,20 @@ identical to build/vucheck on the same PRODUCT listing and catalogue. AXPBOX V8.
 patches (14 flagged reboot, DCL V4.0 flagged security) + CURL, KERBEROS, OPENSSH updates. Repeat CHECK
 answered from the cache without signing in. /SECURITY lists DCL V4.0 only. The x86 store copied to the
 Alpha is refused (VU__STORE). Store file protection (S:RWD,O:RWD,G,W). PRODUCT SHOW PRODUCT has no /OUTPUT.
+
+N18. **Download is three steps** (corrects N3, which assumed two). (1) `GET .../package/download` with
+X-Pkg-Id: <package_file_number> and X-Os-Version returns `urls[]` of ids for the requested file *and
+the files of its prerequisites* (FILESYS .TXT: 4 ids, three of them NOTARY's .ZIPEXE, .ZIPEXE_VNC and
+.TXT; "order" is the install order). (2) `GET .../download/<id>` returns
+`{"md5","save_as","url"}`, url being a pre-signed DigitalOcean Spaces (S3) link with a short expiry.
+(3) GET that link, without the bearer token. VUPDATE asks step 2 for each id and fetches only the one
+whose save_as is the file wanted. Alpha, 2026-11-21.
+
+N19. Patch details list prerequisites for every OpenVMS version a kit family covers: L2 kits name
+VMS842L1A_NOTARY *and* VMS842L2A_NOTARY (RMS V6.2 also both FILESYS variants). Kits come as 1-3 files
+(.ZIP, plus .TXT release notes; NOTARY is a self-extracting .ZIPEXE). A ZIP holds one
+.PCSI$COMPRESSED and its signature manifest .PCSI$COMPRESSED_VNC. Extracted as fixed-512 + Stream_LF,
+`PRODUCT LIST` validates them (%PCSI-I-VSIVALPASSED): TIMEZONE, FILESYS, F11X, PTHREAD, SORT on AXPBOX.
+
+N20. PRODUCT INSTALL has no /CONFIRM qualifier; NOCONFIRM is an /OPTIONS keyword, as are
+SIGNED_KIT and NOVALIDATE_KIT (V8.4-2L2 HELP).

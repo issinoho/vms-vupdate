@@ -79,11 +79,11 @@ static void reason(const char *json, char *out, size_t sz)
 }
 
 /* An authorised portal request; retried once with a new token on 401. */
-static int call(vu_session *s, const char *method, const char *path, const char *extra,
-                const char *body, char **json)
+static int call2(vu_session *s, const char *method, const char *path, const char *extra,
+                 const char *extra2, const char *body, char **json)
 {
     char url[512], auth[VU_TOKEN_MAX + 32];
-    const char *hdr[5];
+    const char *hdr[6];
     vu_resp r;
     int tries, rc, n = 0;
     *json = NULL;
@@ -99,6 +99,8 @@ static int call(vu_session *s, const char *method, const char *path, const char 
             hdr[n++] = "Content-Type: application/json";
         if (extra)
             hdr[n++] = extra;
+        if (extra2)
+            hdr[n++] = extra2;
         hdr[n] = NULL;
         rc = vu_http_request(method, url, hdr, body, MAX_REPLY, &r);
         vu_wipe(auth, sizeof auth);
@@ -126,6 +128,12 @@ static int call(vu_session *s, const char *method, const char *path, const char 
     return VU_OK;
 }
 
+static int call(vu_session *s, const char *method, const char *path, const char *extra,
+                const char *body, char **json)
+{
+    return call2(s, method, path, extra, NULL, body, json);
+}
+
 int vu_portal_whoami(vu_session *s, char **json)
 {
     return call(s, "GET", "/vsp/whoami", NULL, NULL, json);
@@ -143,4 +151,100 @@ int vu_portal_detail(vu_session *s, long package_number, char **json)
     char hdr[64];
     snprintf(hdr, sizeof hdr, "X-Pkg-Id: %ld", package_number);
     return call(s, "GET", "/vsp/pkgman/packages/package", hdr, NULL, json);
+}
+
+/* Download (N18). Step 1, GET .../package/download with X-Pkg-Id: <file number>
+ * and X-Os-Version, lists download ids for the file *and the files of its
+ * prerequisites*. Step 2, GET .../download/<id>, names each one (save_as, md5)
+ * and gives a pre-signed object-store URL. Step 3 fetches that URL without the
+ * bearer token (it is for the portal only). The URL is a short-lived credential:
+ * never printed, wiped after use. */
+int vu_portal_download(vu_session *s, long file_number, const char *os, const char *save_as,
+                       FILE *out, unsigned long *bytes)
+{
+    char h1[64], h2[64], path[128], *json = NULL;
+    cJSON *root, *urls;
+    int rc, q, n, found = 0;
+    *bytes = 0;
+    snprintf(h1, sizeof h1, "X-Pkg-Id: %ld", file_number);
+    snprintf(h2, sizeof h2, "X-Os-Version: %s", os);
+    rc = call2(s, "GET", "/vsp/pkgman/packages/package/download", h1, h2, NULL, &json);
+    if (rc != VU_OK)
+        return rc;
+    root = cJSON_Parse(json);
+    free(json);
+    urls = root ? cJSON_GetObjectItemCaseSensitive(root, "urls") : NULL;
+    if (root && cJSON_IsFalse(cJSON_GetObjectItemCaseSensitive(root, "success"))) {
+        const cJSON *why = cJSON_GetObjectItemCaseSensitive(root, "reason");
+        snprintf(s->err, sizeof s->err, "download: %s",
+                 cJSON_IsString(why) ? why->valuestring : "refused");
+        cJSON_Delete(root);
+        return VU_E_PORTAL;
+    }
+    if (!cJSON_IsArray(urls) || (n = cJSON_GetArraySize(urls)) < 1) {
+        strcpy(s->err, "download: no download ids in the reply");
+        cJSON_Delete(root);
+        return VU_E_REPLY;
+    }
+    rc = VU_OK;
+    for (q = 0; q < n && !found && rc == VU_OK; q++) {
+        const cJSON *id = cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(urls, q), "url");
+        cJSON *r2;
+        const cJSON *sa, *u;
+        char *url = NULL;
+        vu_resp r;
+        if (!cJSON_IsString(id) || !id->valuestring
+            || strspn(id->valuestring, "0123456789abcdefABCDEF-") != strlen(id->valuestring)
+            || strlen(id->valuestring) > 64) {
+            strcpy(s->err, "download: an id is not a UUID");
+            rc = VU_E_REPLY;
+            break;
+        }
+        snprintf(path, sizeof path, "/vsp/pkgman/packages/package/download/%s", id->valuestring);
+        if ((rc = call(s, "GET", path, NULL, NULL, &json)) != VU_OK)
+            break;
+        r2 = cJSON_Parse(json);
+        vu_wipe(json, strlen(json));
+        free(json);
+        sa = r2 ? cJSON_GetObjectItemCaseSensitive(r2, "save_as") : NULL;
+        u = r2 ? cJSON_GetObjectItemCaseSensitive(r2, "url") : NULL;
+        if (!cJSON_IsString(sa) || !sa->valuestring || !cJSON_IsString(u) || !u->valuestring
+            || strncmp(u->valuestring, "https://", 8) != 0) {
+            strcpy(s->err, "download: a reply has no file name or https URL");
+            rc = VU_E_REPLY;
+        } else if (strcmp(sa->valuestring, save_as) == 0) {
+            size_t ul = strlen(u->valuestring);
+            found = 1;
+            if ((url = (char *)malloc(ul + 1)) != NULL)
+                memcpy(url, u->valuestring, ul + 1);
+            else
+                rc = VU_E_MEM;
+        }
+        if (cJSON_IsString(u) && u->valuestring)
+            vu_wipe(u->valuestring, strlen(u->valuestring));
+        cJSON_Delete(r2);
+        if (!url)
+            continue; /* another file (a prerequisite's): not wanted */
+        rc = vu_http_download(url, NULL, out, &r);
+        vu_wipe(url, strlen(url));
+        free(url);
+        s->requests++;
+        if (rc != 0) {
+            snprintf(s->err, sizeof s->err, "download: %s", r.err);
+            rc = VU_E_NET;
+        } else if (r.status < 200 || r.status > 299) {
+            snprintf(s->err, sizeof s->err, "download from the object store: HTTP %ld", r.status);
+            rc = VU_E_PORTAL;
+        } else {
+            *bytes = (unsigned long)r.len;
+            rc = VU_OK;
+        }
+        free(r.data);
+    }
+    cJSON_Delete(root);
+    if (rc == VU_OK && !found) {
+        snprintf(s->err, sizeof s->err, "download: %s is not among the %d files offered", save_as, n);
+        rc = VU_E_REPLY;
+    }
+    return rc;
 }
