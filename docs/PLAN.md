@@ -63,7 +63,8 @@ Like SSHLOGS in vms-dcl-tools.
 1. LOGIN/LOGOUT/CHECK on the x86 node, then the Alpha. Check the output against tests/unit/vucheck on
    saved replies. **Done 2026-11-21** (N17).
 2. SHOW + UPGRADE with /DOWNLOAD_ONLY, then a real install of a low-risk kit (ask first; LUA
-   turned out to be current, see D5) with SAVE_RECOVERY_DATA.
+   turned out to be current, see D5) with SAVE_RECOVERY_DATA. **Done 2026-11-21** (N18-N21):
+   downloads verified on AXPBOX; VMS842L2A_TIMEZONE installed by the user with VUPDATE UPGRADE.
 3. Patch path: prereq ordering + security flag, tested on the Alpha (V8.4-2L2 has SYS-V0500 etc.). The x86 node
    (E9.2-4) has no patches yet.
 4. Nightly batch, x86 + Alpha kits, release per the vms-* family process.
