@@ -131,3 +131,12 @@ N25. LIB$SPAWN copies the caller's process logical names, user-mode ones include
 `DEFINE/USER SYS$OUTPUT x` before VUPDATE, the spawned PRODUCT SHOW PRODUCT wrote into x, not into the
 spawn's output file, and CHECK failed with VUPDATE-E-PCSI (found by the nightly job, AXPBOX 2026-11-21).
 The inventory spawn now uses CLI$M_NOLOGNAM.
+
+N26. **Installing a full kit deletes all patch recovery data.** Kit install test on AXPBOX
+(2026-11-21, batch, /OPTIONS=NOCONFIRM): PCSI listed the 40 recovery data sets (the patches installed
+that day) and deleted them (PCSI$UNDO_001..040); PRODUCT SHOW RECOVERY_DATA now says NORDSET, so
+PRODUCT UNDO PATCH can't take those patches out. The patches stay installed and the node runs. VSI's
+patch dialogue warns of this ("saved recovery data is deleted when any new or updated full product
+kit is installed"). The test otherwise passed: install, VUPDATE$ROOT, protections ([DATA] [CACHE]
+[KITS] owner-only), VERSION, CHECK/REFRESH, SHOW, HELP, nightly NOW/START/STOP, REMOVE (files,
+logical, credentials and cache gone). ISSINOHO kits are unsigned (PCSI-I-NOTSIGNED, as the family).
