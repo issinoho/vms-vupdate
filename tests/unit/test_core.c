@@ -273,6 +273,8 @@ static void test_plan_axp(void)
     /* Not VSI: ignored. VSI but not in the catalogue: listed. */
     CHECK(find(&pl, VU_F_NOTINCAT, "BESZEL") == NULL);
     CHECK(find(&pl, VU_F_NOTINCAT, "DECSET") != NULL);
+    /* The Oper System product VMS: not reported (OPENVMS stands for the OS). */
+    CHECK(find(&pl, VU_F_NOTINCAT, "VMS") == NULL && find(&pl, VU_F_CURRENT, "VMS") == NULL);
     /* Ordering: patches before updates before current. */
     CHECK(pl.n > 2 && pl.f[0].kind == VU_F_PATCH);
     vu_plan_free(&pl);

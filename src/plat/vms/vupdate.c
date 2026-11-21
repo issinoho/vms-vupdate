@@ -1019,11 +1019,13 @@ static unsigned int install_job(job_t *j, int confirm)
                           sizeof product))
         return msg(VU__KIT, 2, j->kitfile, "is not a producer-base-product-version kit name");
     /* SIGNED_KIT: PCSI refuses a kit whose VSI signature doesn't validate (D18).
-     * NOCONFIRM (PRODUCT has no /NOCONFIRM) only when UPGRADE/NOCONFIRM. */
+     * NOCONFIRM skips only PCSI's "these products?" question: the user has already
+     * confirmed VUPDATE's list (or gave /NOCONFIRM). Kit questions are still asked. */
+    (void)confirm;
     snprintf(cmd, sizeof cmd,
-             "PRODUCT INSTALL %s /PRODUCER=%s /BASE_SYSTEM=%s /SOURCE=%s%s /OPTIONS=(SIGNED_KIT%s)",
+             "PRODUCT INSTALL %s /PRODUCER=%s /BASE_SYSTEM=%s /SOURCE=%s%s /OPTIONS=(SIGNED_KIT,NOCONFIRM)",
              product, producer, base, j->dir,
-             j->e->type == VU_T_PATCH ? " /SAVE_RECOVERY_DATA" : "", confirm ? "" : ",NOCONFIRM");
+             j->e->type == VU_T_PATCH ? " /SAVE_RECOVERY_DATA" : "");
     printf("  $ %s\n", cmd);
     fflush(stdout);
     dsc(&dc, cmd, strlen(cmd));
@@ -1043,6 +1045,8 @@ static unsigned int do_upgrade(void)
     char names[16][64], work[256], line[120], size[32];
     int nnames = 0, all = present("ALL"), only_sec = present("SECURITY");
     int download_only = present("DOWNLOAD_ONLY"), confirm = present("CONFIRM");
+    int patches = present("PATCHES"), updates = present("UPDATES");
+    int reboot_ok = present("REBOOT"); /* /NOREBOOT: skip kits that need a restart */
     const char *n_items[MAX_JOBS];
     const char *pre_names[MAX_JOBS][VU_MAXPREREQ];
     const char *const *pre_ptr[MAX_JOBS];
@@ -1075,7 +1079,9 @@ static unsigned int do_upgrade(void)
         for (m = 0; m < nnames; m++)
             if (f->entry && same_name(f->entry->product, names[m]))
                 named = 1;
-        if (!vu_finding_actionable(f->kind) || !(all || named || (only_sec && (c.flags[i] & VU_FL_SECURITY))))
+        if (!vu_finding_actionable(f->kind)
+            || !(all || named || (only_sec && (c.flags[i] & VU_FL_SECURITY))
+                 || (patches && f->kind == VU_F_PATCH) || (updates && f->kind == VU_F_UPDATE)))
             continue;
         if (f->kind == VU_F_OSUPGRADE) {
             printf("  %s %s: an OpenVMS upgrade, reported only (VUPDATE never installs one)\n",
@@ -1117,6 +1123,47 @@ static unsigned int do_upgrade(void)
     }
     if (st)
         goto out;
+    /* /NOREBOOT: drop kits that need a restart, then (repeatedly) kits that need a
+     * dropped kit first. */
+    if (!reboot_ok && njobs) {
+        int changed = 1;
+        size_t w;
+        char *drop = (char *)calloc(njobs, 1);
+        if (!drop) {
+            st = msg(VU__FAILED, 1, "out of memory", 0);
+            goto out;
+        }
+        for (i = 0; i < njobs; i++)
+            drop[i] = (char)jobs[i].reboot;
+        while (changed) {
+            changed = 0;
+            for (i = 0; i < njobs; i++) {
+                int p;
+                if (drop[i])
+                    continue;
+                for (p = 0; p < jobs[i].d.nprereq; p++) {
+                    int x = job_index(jobs[i].d.prereq[p].package_number);
+                    if (x >= 0 && drop[x]) {
+                        drop[i] = 2;
+                        changed = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        for (i = 0, w = 0; i < njobs; i++) {
+            if (drop[i]) {
+                printf("  skipped (/NOREBOOT): %s%s\n", jobs[i].e->kitname,
+                       drop[i] == 2 ? " (needs a kit that needs a reboot)" : " (needs a reboot)");
+                continue;
+            }
+            if (w != i)
+                jobs[w] = jobs[i];
+            w++;
+        }
+        njobs = w;
+        free(drop);
+    }
     if (!njobs) {
         st = msg(VU__NOTHING, 0, 0, 0);
         goto out;

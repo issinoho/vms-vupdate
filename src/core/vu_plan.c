@@ -216,6 +216,10 @@ int vu_plan_build(const vu_inventory *inv, const vu_catalog *cat, const char *os
         int is_os;
         if (p->kit == VU_KIT_PATCH || !vu_producer_is_vsi(p->producer))
             continue;
+        /* The "Oper System" product (VMS) is never in the catalogue: the platform
+         * product OPENVMS stands for the OS, so VMS isn't reported at all. */
+        if (p->kit == VU_KIT_OS)
+            continue;
         is_os = ieq(p->name, "OPENVMS");
         e = newest(cat, p->name, is_os ? "V" : "LOE", os_ver, arch, opts, p->ver);
         if (e && vu_ver_cmp(e->ver, p->ver) > 0)

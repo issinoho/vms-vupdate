@@ -3,8 +3,9 @@
 !   VUPDATE LOGOUT
 !   VUPDATE CHECK [/SECURITY] [/FIELD_TEST] [/ALL] [/REFRESH] [/OUTPUT=file]
 !   VUPDATE SHOW product [/FIELD_TEST] [/REFRESH]
-!   VUPDATE UPGRADE [product[,...]] [/ALL] [/SECURITY] [/NOCONFIRM] [/FIELD_TEST]
-!                   [/DOWNLOAD_ONLY] [/WORK=directory] [/REFRESH]
+!   VUPDATE UPGRADE [product[,...]] [/ALL] [/PATCHES] [/UPDATES] [/SECURITY]
+!                   [/NOREBOOT] [/NOCONFIRM] [/FIELD_TEST] [/DOWNLOAD_ONLY]
+!                   [/WORK=directory] [/REFRESH]
 
 define type ACTIONS
     keyword LOGIN,   syntax=VU_LOGIN
@@ -43,10 +44,13 @@ define syntax VU_UPGRADE
     parameter P2, label=PRODUCT, prompt="Product", value(list)
     qualifier ALL
     qualifier SECURITY
+    qualifier PATCHES
+    qualifier UPDATES
+    qualifier REBOOT, default
     qualifier CONFIRM, default
     qualifier FIELD_TEST
     qualifier DOWNLOAD_ONLY
     qualifier WORK, value(required, type=$FILE)
     qualifier REFRESH
-    disallow not (PRODUCT or ALL or SECURITY)
+    disallow not (PRODUCT or ALL or SECURITY or PATCHES or UPDATES)
     disallow PRODUCT and ALL

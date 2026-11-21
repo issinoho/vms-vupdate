@@ -87,7 +87,13 @@ on L2 kits, N19) are skipped. Order: vu_install_order (prerequisites first, else
 installation_order is per kit and ignored across kits. OS upgrades are never installed.
 
 D18 (2026-11-21, phase 2). **Install command**: `PRODUCT INSTALL <product> /PRODUCER /BASE_SYSTEM
-/SOURCE=<kit dir> [/SAVE_RECOVERY_DATA for patches] /OPTIONS=(SIGNED_KIT[,NOCONFIRM])` in a subprocess
+/SOURCE=<kit dir> [/SAVE_RECOVERY_DATA for patches] /OPTIONS=(SIGNED_KIT,NOCONFIRM)` in a subprocess
 on the user's terminal. SIGNED_KIT makes PCSI refuse a kit that fails VSI signature validation. UPGRADE
 asks before installing (needs a terminal) unless /NOCONFIRM; stops after a kit that needs a reboot.
 The kit directory is deleted after a successful install, kept on failure and with /DOWNLOAD_ONLY.
+
+D19 (2026-11-21, phase 3). **UPGRADE selectors and /NOREBOOT**: /PATCHES and /UPDATES select all
+findings of that kind (beside names, /ALL, /SECURITY). /NOREBOOT drops kits with restart_required and,
+transitively, kits needing a dropped kit. VUPDATE asks once for the whole list, so PCSI's own
+selection question is always skipped (NOCONFIRM); kit-specific questions still come. The OS product
+VMS ("Oper System") is no longer reported: OPENVMS stands for the OS.
