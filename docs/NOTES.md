@@ -94,3 +94,10 @@ VMS842L1A_NOTARY *and* VMS842L2A_NOTARY (RMS V6.2 also both FILESYS variants). K
 
 N20. PRODUCT INSTALL has no /CONFIRM qualifier; NOCONFIRM is an /OPTIONS keyword, as are
 SIGNED_KIT and NOVALIDATE_KIT (V8.4-2L2 HELP).
+
+N21. **First real install** (2026-11-21, user at the AXPBOX terminal): `VUPDATE UPGRADE
+VMS842L2A_TIMEZONE` installed the patch; PRODUCT SHOW HISTORY: `VSI AXPVMS VMS842L2A_TIMEZONE V1.0
+Patch Install Val`, kit directory removed afterwards. PCSI records V1.0, while the portal kit name
+`VMS842L2A_TIMEZONE-V0100-4` (and its version field V1.0-4) read as V1.0-4, so CHECK still offered it.
+The `-4` is the PCSI kit type (the kit file is `...-V0100--4`). The decoder now drops a lone digit
+after the version of an OpenVMS patch-family name; only the TIMEZONE kits have one (x86, Alpha).

@@ -130,6 +130,17 @@ static const char *strip_prefixes(const char *s)
     return s;
 }
 
+/* "VMS" + digit ... "_" within the first 12 characters (as vu_is_os_patch_family). */
+static int os_patch_family(const char *s, size_t len)
+{
+    const char *u;
+    if (len < 5 || toupper((unsigned char)s[0]) != 'V' || toupper((unsigned char)s[1]) != 'M'
+        || toupper((unsigned char)s[2]) != 'S' || !isdigit((unsigned char)s[3]))
+        return 0;
+    u = (const char *)memchr(s, '_', len);
+    return u != NULL && u - s <= 12;
+}
+
 /* Does p start a version field: one stage letter then MMmm or N.N, ended by
  * '-' or end of string? On success *vlen is the length of that field. */
 static int version_field(const char *p, size_t *vlen)
@@ -236,6 +247,12 @@ int vu_kitname_decode(const char *kitname, char *product, size_t prodsz,
     /* A final all-digit group after another group is the kit revision. */
     if (ng >= 2 && all_digits(groups[ng - 1], glen[ng - 1]))
         ng--;
+    /* OpenVMS patch families (VMS842L2A_, VMS923X_ ...) are versioned Vmm.nn only:
+     * a lone digit after it is the PCSI kit type ("VMS842L2A_TIMEZONE-V0100-4";
+     * its kit file is ...-V0100--4 and PCSI records V1.0; N21). */
+    if (ng == 1 && glen[0] == 1 && isdigit((unsigned char)groups[0][0])
+        && os_patch_family(s, (size_t)(p - 1 - s)))
+        ng = 0;
     if (ng > 0) {
         size_t any = 0;
         for (g = 0; g < ng; g++)
