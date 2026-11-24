@@ -154,3 +154,11 @@ were written as fixed 512 and PCSI changed them to 8192; (5) PERL540 showed as V
 name) where the portal and PCSI say V5.40-2 (COBOL's portal version is V3.5-02: the padding can't
 come from the name). In the saved catalogues no VMS<earlier>_ kit lists a later release correctly:
 L2A kits list L1 and L2, L1A kits only L1, VMS923X kits list V9.2-2 first.
+
+N28. **Upgrade in place keeps the sign-in and the nightly job.** 0.1.0 -> 0.1.1 by PRODUCT INSTALL
+/VERSION=T0.1-1 /OPTIONS=NOCONFIRM on both nodes (2026-11-24; x86 interactive, AXPBOX in batch; no
+patch recovery data on either): PCSI removed T0.1-0 and installed T0.1-1 but did not run the old
+kit's remove action (VUPDATE$STARTUP REMOVE), so CREDENTIALS.DAT, [DATA] logs and the queued
+VUPDATE_NIGHTLY job stayed; the postinstall step ran and redefined VUPDATE$ROOT. Afterwards the
+installed VUPDATE VERSION said 0.1.1 and CHECK signed in with the saved credential (x86 fetched a
+fresh catalogue). The credential file was backed up first in case; not needed.
