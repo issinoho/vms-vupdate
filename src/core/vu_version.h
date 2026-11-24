@@ -3,7 +3,7 @@
 #ifndef VU_VERSION_H
 #define VU_VERSION_H
 
-#define VU_VERSION "0.1.0"
-#define VU_PCSI_VERSION "T0.1-0" /* PCSI form: T = early test release */
+#define VU_VERSION "0.1.1"
+#define VU_PCSI_VERSION "T0.1-1" /* PCSI form: T = early test release */
 
 #endif

@@ -22,7 +22,7 @@ $ @VUPDATE$ROOT:[COM]VUPDATE_NIGHTLY START   ! a nightly check (never installs)
 $ VUPDATE HELP
 ```
 
-**Status: early test (0.1.0).** On AXPBOX (Alpha V8.4-2L2) it installed all 38 OpenVMS L2 patches
+**Status: early test (0.1.1).** On AXPBOX (Alpha V8.4-2L2) it installed all 38 OpenVMS L2 patches
 the portal offers, in three runs, with their hidden prerequisites. See [docs/PLAN.md](docs/PLAN.md)
 and [kit/readme.vms](kit/readme.vms) for what UPGRADE does and its limits.
 
