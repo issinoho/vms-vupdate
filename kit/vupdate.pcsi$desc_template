@@ -5,7 +5,8 @@
 product @PRODUCER@ @BASE@ VUPDATE @PCSIVERSION@ full ;
 
     -- VUPDATE.EXE links libcurl, zlib and zstd statically; OpenSSL is VSI's SSL3.
-    software VSI @BASE@ SSL3 ;
+    -- Built against V3.0-22: with V3.0-21 the image fails with SHRIDMISMAT.
+    software VSI @BASE@ SSL3 version minimum V3.0-22 ;
 
     information RELEASE_NOTES phase after ;
 

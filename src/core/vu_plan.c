@@ -67,8 +67,9 @@ int vu_patch_needs_detail(const vu_entry *e, const char *os_ver)
     char fam[16];
     if (e->type != VU_T_PATCH || e->nminos != 1 || ieq(e->minos[0], os_ver))
         return 0;
-    if (vu_patch_family_os(e->product, fam, sizeof fam) && ieq(fam, os_ver))
-        return 0; /* already known to apply */
+    if (vu_patch_family_os(e->product, fam, sizeof fam)
+        && (ieq(fam, os_ver) || vu_ver_cmp(fam, os_ver) < 0))
+        return 0; /* already known to apply, or made for an earlier release */
     /* Only kits made for an earlier update of the same major.minor can also list
      * this version: V9.2-2 kits may cover V9.2-3; V8.4-2L1 kits may cover L2. */
     if (vu_ver_cmp(e->minos[0], os_ver) > 0)
@@ -91,14 +92,18 @@ int vu_entry_applies(const vu_entry *e, const char *os_ver, int arch)
         return 1;
     if (e->type == VU_T_PATCH) {
         char fam[16];
+        int has_fam = vu_patch_family_os(e->product, fam, sizeof fam);
+        /* The family code is the newest release a kit is for: L2A kits list L1
+         * too, no L1A kit lists L2. The portal lists VMS922X_UPDATE V1.0 for
+         * V9.2-3, but the kit itself says V9.2-2 only (D26): trust the name. */
+        if (has_fam && vu_ver_cmp(fam, os_ver) < 0)
+            return 0;
         for (i = 0; i < e->nminos; i++)
             if (ieq(e->minos[i], os_ver))
                 return 1;
         /* Catalogue rows carry only the first minos; the family code
          * (VMS923X_ = V9.2-3) names the release the kit was made for. */
-        if (vu_patch_family_os(e->product, fam, sizeof fam) && ieq(fam, os_ver))
-            return 1;
-        return 0;
+        return has_fam && ieq(fam, os_ver);
     }
     for (i = 0; i < e->nminos; i++) {
         const char *m = e->minos[i];
@@ -110,6 +115,22 @@ int vu_entry_applies(const vu_entry *e, const char *os_ver, int arch)
     if (!lowest)
         return 0; /* only non-VMS minos values: not for this node */
     return vu_ver_cmp(os_ver, lowest) >= 0;
+}
+
+const char *vu_entry_os_for(const vu_entry *e, const char *os_ver)
+{
+    const char *best = NULL;
+    int i;
+    for (i = 0; i < e->nminos; i++) {
+        const char *m = e->minos[i];
+        if (ieq(m, os_ver))
+            return os_ver;
+        if (!(isalpha((unsigned char)m[0]) && isdigit((unsigned char)m[1])))
+            continue;
+        if (vu_ver_cmp(m, os_ver) < 0 && (!best || vu_ver_cmp(m, best) > 0))
+            best = m;
+    }
+    return best ? best : os_ver;
 }
 
 static int push(vu_plan *pl, vu_find_t k, const vu_product *p, const vu_entry *e)

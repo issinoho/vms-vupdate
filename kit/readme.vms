@@ -82,7 +82,7 @@ Logical names
 
 Requires
 --------
-OpenVMS x86-64 (V9.2 or later) or Alpha (V8.4-2L2), VSI SSL3 (OpenSSL 3), a VSI
+OpenVMS x86-64 (V9.2 or later) or Alpha (V8.4-2L2), VSI SSL3 V3.0-22 or later, a VSI
 Service Platform account, and HTTPS access to sp.vmssoftware.com,
 kc.teracloud.com and the portal's download store (nyc3.digitaloceanspaces.com).
 

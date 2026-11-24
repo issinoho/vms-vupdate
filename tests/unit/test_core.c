@@ -202,6 +202,21 @@ static void test_cat(void)
                            &cat, err, sizeof err) == -3);
     CHECK(strstr(err, "sysarch") != NULL);
     CHECK(vu_catalog_parse("<html>", &cat, err, sizeof err) == -1);
+    /* Shown versions follow the portal's zero padding, which the name can't give. */
+    CHECK(vu_catalog_parse("[{\"name\":\"X86VMS-PERL540-V0540-02\",\"version\":\"V5.40-2\","
+                           "\"type\":\"O\",\"minos\":\"V9.2-2\",\"sysarch\":[\"X86\"]},"
+                           "{\"name\":\"X86VMS-COBOL-V0305-02\",\"version\":\"V3.5-02\","
+                           "\"type\":\"O\",\"minos\":\"V9.2-2\",\"sysarch\":[\"X86\"]},"
+                           "{\"name\":\"X86VMS-GIT-V2.44-1B-1\",\"version\":\"V2.44-1\","
+                           "\"type\":\"O\",\"minos\":\"V9.2-2\",\"sysarch\":[\"X86\"]}]",
+                           &cat, err, sizeof err) == 0);
+    CHECK(cat.n == 3);
+    if (cat.n == 3) {
+        CHECK_STR(cat.e[0].ver, "V5.40-2");
+        CHECK_STR(cat.e[1].ver, "V3.5-02");
+        CHECK_STR(cat.e[2].ver, "V2.44-1B"); /* disagree: the name wins */
+    }
+    vu_catalog_free(&cat);
 
     t = need("tests/data/det_update.json");
     if (t) {
@@ -368,18 +383,63 @@ static void test_applies(void)
         CHECK(vu_patch_family_os("VMS842L2A_SYS", b, sizeof b) && strcmp(b, "V8.4-2L2") == 0);
         CHECK(!vu_patch_family_os("PERFMGMT", b, sizeof b));
     }
-    /* A V9.2-2 patch may also cover V9.2-3: fetch its detail. Not V9.1 kits on 9.2. */
+    /* A patch whose catalogue row names an earlier minos may also cover this
+     * release: fetch its detail. Not V9.1 kits on 9.2. */
     e.type = 'E';
     strcpy(e.minos[0], "V9.2-2");
-    strcpy(e.product, "VMS922X_SORT");
+    strcpy(e.product, "SOMEPATCH");
     CHECK(vu_patch_needs_detail(&e, "V9.2-3"));
     CHECK(!vu_patch_needs_detail(&e, "V9.2-2"));
     strcpy(e.minos[0], "V9.1");
     CHECK(!vu_patch_needs_detail(&e, "V9.2-3"));
+    /* VMS923X kits list V9.2-2 first and apply to V9.2-3 by their name. */
+    strcpy(e.minos[0], "V9.2-2");
+    strcpy(e.product, "VMS923X_SORT");
+    CHECK(!vu_patch_needs_detail(&e, "V9.2-3"));
+    CHECK(vu_entry_applies(&e, "V9.2-3", 0));
+    /* A kit made for an earlier release never applies, whatever the portal lists
+     * (D26: VMS922X_UPDATE V1.0 listed for V9.2-3). */
+    strcpy(e.product, "VMS922X_UPDATE");
+    e.nminos = 2;
+    strcpy(e.minos[1], "V9.2-3");
+    CHECK(!vu_patch_needs_detail(&e, "V9.2-3"));
+    CHECK(!vu_entry_applies(&e, "V9.2-3", 0));
+    CHECK(vu_entry_applies(&e, "V9.2-2", 0));
+    e.nminos = 1;
     strcpy(e.minos[0], "V8.4-2L1");
     strcpy(e.product, "VMS842L1A_SYS");
-    CHECK(vu_patch_needs_detail(&e, "V8.4-2L2"));
+    CHECK(!vu_patch_needs_detail(&e, "V8.4-2L2"));
     CHECK(!vu_entry_applies(&e, "V8.4-2L2", 0));
+    /* L2A kits list L1 as well: they still apply there. */
+    strcpy(e.product, "VMS842L2A_DCL");
+    e.nminos = 2;
+    strcpy(e.minos[1], "V8.4-2L2");
+    CHECK(vu_entry_applies(&e, "V8.4-2L1", 0));
+    CHECK(vu_entry_applies(&e, "V8.4-2L2", 0));
+    e.nminos = 1;
+}
+
+static void test_os_for(void)
+{
+    vu_entry e;
+    memset(&e, 0, sizeof e);
+    e.type = 'O';
+    e.nminos = 1;
+    strcpy(e.minos[0], "V9.2-3");
+    CHECK_STR(vu_entry_os_for(&e, "E9.2-4"), "V9.2-3");
+    CHECK_STR(vu_entry_os_for(&e, "V9.2-3"), "V9.2-3");
+    e.nminos = 3;
+    strcpy(e.minos[0], "V9.2-2");
+    strcpy(e.minos[1], "windows");
+    strcpy(e.minos[2], "V9.2-3");
+    CHECK_STR(vu_entry_os_for(&e, "E9.2-4"), "V9.2-3");
+    CHECK_STR(vu_entry_os_for(&e, "V9.2-2"), "V9.2-2");
+    e.nminos = 2;
+    strcpy(e.minos[0], "V8.4-2L1");
+    strcpy(e.minos[1], "V8.4-2L2");
+    CHECK_STR(vu_entry_os_for(&e, "V8.4-2L2"), "V8.4-2L2");
+    e.nminos = 0;
+    CHECK_STR(vu_entry_os_for(&e, "E9.2-4"), "E9.2-4");
 }
 
 static void test_order(void)
@@ -575,6 +635,7 @@ int main(void)
     test_applies();
     test_plan_axp();
     test_plan_x86();
+    test_os_for();
     test_order();
     test_auth();
     test_report();

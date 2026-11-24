@@ -37,15 +37,24 @@ int vu_is_os_patch_family(const char *name);
  * VMS842L2A_SYS -> V8.4-2L2. Returns 1 when the name holds one. */
 int vu_patch_family_os(const char *name, char *buf, size_t sz);
 
-/* Catalogue rows give only the first minos of a patch, so a patch made for an
- * earlier update (V9.2-2) may also cover os_ver (V9.2-3). 1 when the caller should
+/* Catalogue rows give only the first minos of a patch, so one listed first for an
+ * earlier update (V9.2-2) may also cover os_ver (V9.2-3); not one whose family
+ * code names an earlier release (D26). 1 when the caller should
  * fetch the detail and merge its minos list (vu_entry_set_minos) before planning. */
 int vu_patch_needs_detail(const vu_entry *e, const char *os_ver);
 
 /* Is entry e applicable to a node running os_ver (e.g. "V8.4-2L2") on arch?
- * Patches need os_ver listed in minos, or a family code naming it; products need os_ver >= the lowest minos;
+ * Patches need os_ver listed in minos, or a family code naming it, and never apply
+ * when their family code names an earlier release (D26); products need os_ver >= the
+ * lowest minos;
  * OS kits and kits with no minos are always applicable. */
 int vu_entry_applies(const vu_entry *e, const char *os_ver, int arch);
+
+/* The OpenVMS version to name when downloading e on a node running os_ver: os_ver
+ * when e lists it, else the newest version e lists below it (V9.2-3 for a V9.2-3
+ * kit on E9.2-4: the portal refuses a version the kit doesn't list, HTTP 409),
+ * else os_ver. Returns os_ver or a pointer into e->minos. */
+const char *vu_entry_os_for(const vu_entry *e, const char *os_ver);
 
 /* Build the plan. os_ver is the running version (the OPENVMS/VMS product version or
  * F$GETSYI("VERSION") with its letter). For each product only the newest

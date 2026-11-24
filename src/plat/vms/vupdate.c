@@ -998,8 +998,10 @@ typedef struct {
     char kitfile[8][128]; /* the first 8 PCSI kits in the archive */
 } unzip_ctx;
 
-/* PCSI kit files are written as fixed 512-byte records, as VSI's instructions
- * for transferred kits ask (D16); everything else as a plain stream file. */
+/* Compressed PCSI kits are written as fixed 512-byte records, as VSI's
+ * instructions for transferred kits ask (D16); plain .PCSI kits as fixed 8192,
+ * the format PCSI itself gives them (it rewrote 512 to 8192 at install);
+ * everything else as a plain stream file. */
 static FILE *open_member(const char *name, void *user)
 {
     unzip_ctx *u = (unzip_ctx *)user;
@@ -1011,14 +1013,23 @@ static FILE *open_member(const char *name, void *user)
             strncpy(u->kitfile[u->nkits], name, sizeof u->kitfile[0] - 1);
         u->nkits++;
         /* open() takes the RMS keywords (fopen is two-argument under /STANDARD=C99). */
-        int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0, "rfm=fix", "mrs=512", "rat=none");
+        int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0, "rfm=fix",
+                      kind == VU_KF_PCSI ? "mrs=8192" : "mrs=512", "rat=none");
         return fd < 0 ? NULL : fdopen(fd, "wb");
     }
     return fopen(path, "wb");
 }
 
 /* Download one of a kit's files to path and check its MD5. 0 or a message value. */
-static unsigned int download_file(ctx_t *c, const vu_file *f, const char *path, int quiet)
+/* The version a job's downloads name: from the detail's minos list (fuller than
+ * the catalogue row's), else the row's. */
+static const char *job_os(const ctx_t *c, const job_t *j)
+{
+    return vu_entry_os_for(j->d.entry.nminos > 0 ? &j->d.entry : j->e, c->os);
+}
+
+static unsigned int download_file(ctx_t *c, const vu_file *f, const char *os, const char *path,
+                                  int quiet)
 {
     char hex[33], size[32];
     unsigned long bytes = 0;
@@ -1033,7 +1044,7 @@ static unsigned int download_file(ctx_t *c, const vu_file *f, const char *path, 
     }
     if (!(out = fopen(path, "wb")))
         return msg(VU__KIT, 2, path, "cannot create the file");
-    rc = vu_portal_download(&c->s, f->file_number, c->os, f->save_as, out, &bytes);
+    rc = vu_portal_download(&c->s, f->file_number, os, f->save_as, out, &bytes);
     if (fclose(out) != 0 && rc == VU_OK) {
         rc = VU_E_NET;
         strcpy(c->s.err, "cannot write the kit file (disk full?)");
@@ -1074,7 +1085,7 @@ static unsigned int notes_prereqs(ctx_t *c, job_t *j)
     if (k == j->d.nfiles)
         return 0; /* no release notes offered */
     snprintf(path, sizeof path, "VUPDATE$ROOT:[CACHE]NOTES_%ld.TXT", j->d.files[k].file_number);
-    if (age_of(path) < 0 && (st = download_file(c, &j->d.files[k], path, 1)) != 0)
+    if (age_of(path) < 0 && (st = download_file(c, &j->d.files[k], job_os(c, j), path, 1)) != 0)
         return st;
     if (!(text = slurp(path, 4L << 20)))
         return 0;
@@ -1135,7 +1146,7 @@ static unsigned int fetch_job(ctx_t *c, job_t *j, const char *work)
         if (!f->save_as[0] || strpbrk(f->save_as, ":[]<>/\\") || strstr(f->save_as, ".."))
             return msg(VU__KIT, 2, j->e->kitname, "the portal gave an unusable file name");
         snprintf(path, sizeof path, "%s%s", j->dir, f->save_as);
-        if ((st = download_file(c, f, path, 0)) != 0)
+        if ((st = download_file(c, f, job_os(c, j), path, 0)) != 0)
             return st;
         if (vu_kitfile_kind(f->save_as) != VU_KF_NONE) {
             strncpy(j->kitfile, f->save_as, sizeof j->kitfile - 1);

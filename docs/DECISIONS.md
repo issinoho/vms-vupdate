@@ -140,3 +140,15 @@ Without a terminal it installs nothing then, unless /DISCARD_RECOVERY_DATA is gi
 install_kit checks again before each full kit. VUPDATE$TEST_RECOVERY_FILE (tests only) feeds a
 saved listing. Verified on AXPBOX: refusal in batch, the question (answered NO) on a terminal, and no
 question with no recovery data.
+
+D26 (2026-11-24, after N27). **0.1.0 test fixes.** (a) The kit requires SSL3 V3.0-22 (`version
+minimum`). (b) A patch whose family code names a release earlier than the node's never applies,
+whatever minos the portal lists: the name is the kit's own claim. Those kits' details are no longer
+fetched (20 fewer on AXPBOX). (c) Downloads name the version the kit lists (vu_entry_os_for: the
+node's when listed, else the newest listed below it), not the node's own. (d) Plain .PCSI kits are
+written as fixed 8192 (D16 stays for .PCSI$COMPRESSED). (e) The shown version is the portal's when it
+equals the name's and has as many '-' fields (V5.40-2, but V5.0 for a patch the portal calls V5.0-0).
+Verified on the x86 node (E9.2-4, 2026-11-24): UPGRADE X86ASM /DOWNLOAD_ONLY (minos V9.2-2, V9.2-3)
+downloaded, MD5 matched and unpacked (fixed 512 .PCSI$COMPRESSED); the same run with the node's
+version sent gave "HTTP 409: OS version conflict". (b) and (e) by unit tests and vucheck on the saved
+catalogues (plans unchanged); (a) and (d) not yet run (no new kit built; no plain .PCSI kit offered).

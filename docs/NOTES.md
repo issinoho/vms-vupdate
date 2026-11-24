@@ -140,3 +140,17 @@ patch dialogue warns of this ("saved recovery data is deleted when any new or up
 kit is installed"). The test otherwise passed: install, VUPDATE$ROOT, protections ([DATA] [CACHE]
 [KITS] owner-only), VERSION, CHECK/REFRESH, SHOW, HELP, nightly NOW/START/STOP, REMOVE (files,
 logical, credentials and cache gone). ISSINOHO kits are unsigned (PCSI-I-NOTSIGNED, as the family).
+
+N27. **Outside test of 0.1.0** (a tester with an Ambassador account, released x86 kit, 2026-11-24;
+three nodes: two E9.2-4 on KVM and ESXi, one V9.2-3 on ESXi). On V9.2-3: CHECK matched PRODUCT
+SHOW, MD5s passed, CMS V4.8-14 and VMS923X_SORT V2.2 installed with recovery data, the D25 guard
+stopped a full kit (PERL540) with and without /NOCONFIRM, the nightly check sent its REQUEST on each
+change. Found: (1) on SSL3 V3.0-21 the kit installs and the first command fails with SHRIDMISMAT
+(built against V3.0-22, on both our nodes); (2) on E9.2-4 every download is refused, "HTTP 409: OS
+version conflict": VUPDATE sent X-Os-Version E9.2-4 for V9.2-3 kits, which download on V9.2-3 (our
+downloads had all been on Alpha, N18-N24); (3) on V9.2-3 the portal lists VMS922X_UPDATE V1.0 for
+V9.2-3, where the kit's PCSI description and release notes say V9.2-2 only; (4) plain .PCSI kits
+were written as fixed 512 and PCSI changed them to 8192; (5) PERL540 showed as V5.40-02 (from the
+name) where the portal and PCSI say V5.40-2 (COBOL's portal version is V3.5-02: the padding can't
+come from the name). In the saved catalogues no VMS<earlier>_ kit lists a later release correctly:
+L2A kits list L1 and L2, L1A kits only L1, VMS923X kits list V9.2-2 first.

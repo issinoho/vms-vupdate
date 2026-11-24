@@ -81,14 +81,28 @@ int vu_text_is_security(const char *t)
            || has_ci(t, "exploit");
 }
 
+static int dashes(const char *s)
+{
+    int n = 0;
+    for (; *s; s++)
+        n += *s == '-';
+    return n;
+}
+
 static void fill_entry(const cJSON *o, vu_entry *e)
 {
     const cJSON *a;
     memset(e, 0, sizeof *e);
     scopy(e->kitname, sizeof e->kitname, jstr(o, "name"));
     scopy(e->portal_ver, sizeof e->portal_ver, jstr(o, "version"));
+    /* The name gives the version to compare; the portal's spelling is the one
+     * shown when the two agree. Zero padding isn't knowable from the name:
+     * PERL540-V0540-02 is V5.40-2, COBOL-V0305-02 is V3.5-02. Only padding: the
+     * portal's "V5.0-0" for a patch PCSI records as V5.0 keeps the name's form. */
     if (vu_kitname_decode(e->kitname, e->product, sizeof e->product, e->ver, sizeof e->ver)
-        != 1)
+            != 1
+        || (e->portal_ver[0] && vu_ver_cmp(e->ver, e->portal_ver) == 0
+            && dashes(e->ver) == dashes(e->portal_ver)))
         scopy(e->ver, sizeof e->ver, e->portal_ver);
     {
         const char *t = jstr(o, "type");
